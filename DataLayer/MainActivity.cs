@@ -45,6 +45,7 @@ namespace DataLayer
         const string CountKey = "count";
         const string FunMessagePath = "/fun-message";
         const string DataPointPath = "/data-point";
+        const string DataPointsPath = "/data-points";
 
         GoogleApiClient mGoogleApiClient;
 		bool mResolvingError = false;
@@ -179,6 +180,7 @@ namespace DataLayer
             }
 		}
 
+
         public void OnDataChanged(DataEventBuffer dataEvents)
         {
             LOGD(Tag, "OnDataChanged: " + dataEvents);
@@ -201,90 +203,165 @@ namespace DataLayer
                 }
             });
         }
-        //public void OnDataChanged(DataEventBuffer dataEvents)
-        //{
-        //    //do nothing
-        //}
+        
 
 
         public void OnMessageReceived (IMessageEvent messageEvent)
 		{
-			LOGD (Tag, "OnMessageReceived() A message from the watch was received: " + messageEvent.RequestId + " " + messageEvent.Path);
-			handler.Post( () => {
+            Log.Info("HH_TEST", "Message Event");
+            //LOGD (Tag, "OnMessageReceived() A message from the watch was received: " + messageEvent.RequestId + " " + messageEvent.Path);
+            handler.Post( () => {
                 if (messageEvent.Path == FunMessagePath)
-                {
-                    //dataItemListAdapter.Add(new Event("Manual message from watch", messageEvent.ToString()));
-                    statusTextView.Text = "Fun message received";
-                }
-                else if (messageEvent.Path == DataPointPath)
                 {
                     //dataItemListAdapter.Add(new Event("Manual message from watch", messageEvent.ToString()));
                     var buffer = messageEvent.GetData();
                     string initialMessage = Encoding.Default.GetString(buffer, 0, buffer.Length);
-                    string[] types = initialMessage.Split(";");
-                    if (types.Length == 3)
+                    RunOnUiThread(() =>
                     {
-                        
-                        List<HeartDataPoint> listRef;
-                        HeartDataType dataType;
-                        
-                        string type = types[0];
-                        if (type == "HeartBeat")
+                        statusTextView.Text = initialMessage;
+                        Log.Info("HH_TEST", "Fun Message received, contained: " + initialMessage);
+                    });
+                    
+                }
+                else if (messageEvent.Path == DataPointPath)
+                {
+                    Log.Info("HH_TEST", "One Datapoint received");
+                    //dataItemListAdapter.Add(new Event("Manual message from watch", messageEvent.ToString()));
+                    var buffer = messageEvent.GetData();
+                    string initialMessage = Encoding.Default.GetString(buffer, 0, buffer.Length);
+                    HeartDataPoint datapoint = decodeDataPoint(initialMessage);
+
+
+                        if (datapoint != null)
                         {
-                            listRef = hdata_Beat;
-                            dataType = HeartDataType.HeartBeat;
-                        }else if (type == "HeartRate")
-                        {
-                            listRef = hdata_Rate;
-                            dataType = HeartDataType.HeartRate;
-                        }
-                        else if (type == "StepCount")
-                        {
-                            listRef = hdata_Steps;
-                            dataType = HeartDataType.StepCount;
+                            RunOnUiThread(() =>
+                            {
+                                statusTextView.Text = "Data received(" + datapoint.heartType + ", " + datapoint.amount + ", " + datapoint.timestamp + ").";
+                            });
+
                         }
                         else
                         {
-                            listRef = null;
-                            dataType = HeartDataType.None;
-                        }
-
-                        int value = 0;
-                        bool wasNumber = Int32.TryParse(types[1], out value);
-                        if (wasNumber && dataType != HeartDataType.None && listRef != null)
-                        {
-                            //string dateString = date.ToString("o");
-                            DateTime restoredDate = DateTime.Parse(types[2], null, DateTimeStyles.RoundtripKind);
-
-                            listRef.Add(new HeartDataPoint(dataType, value, restoredDate));
-
-                            statusTextView.Text = "Data received(" + dataType + ", " + value + ", " + restoredDate + ").";
-                        }
-                        else
-                        {
-                            statusTextView.Text = "Invalid data received";
+                            RunOnUiThread(() => {
+                                statusTextView.Text = "Invalid data received";
+                            });
                         }
                         
+                    
+                }else if (messageEvent.Path == DataPointsPath)
+                {
+                    Log.Info("HH_TEST", "Multiple Messages received");
+                    var buffer = messageEvent.GetData();
+                    string initialMessage = Encoding.Default.GetString(buffer, 0, buffer.Length);
+                    string[] allDataPoints;
+                    if (initialMessage.Contains("|"))
+                    {
+                        allDataPoints = initialMessage.Split("|");
                     }
                     else
                     {
-                        statusTextView.Text = "Invalid data received";
+                        allDataPoints = new[] { initialMessage };
                     }
+
+                    int teller = 0;
+                    foreach (string pointData in allDataPoints)
+                    {
+                        HeartDataPoint p = decodeDataPoint(pointData);
+                        if (p != null)
+                        {
+                            teller++;
+                        }
+                    }
+
+                    if (teller > 0)
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            statusTextView.Text = "Data received(Amount: " +teller+ ").";
+                        });
+
+                    }
+                    else
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            statusTextView.Text = "No valid data received.";
+                        });
+                    }
+
                 }
                 else
                 {
                     //dataItemListAdapter.Add(new Event("Message from watch", messageEvent.ToString()));
                     //do nothing
+                    Log.Info("HH_TEST", "No Match for path");
                 }
             });
 		}
 
-		public void OnPeerConnected (INode peer)
+        private HeartDataPoint decodeDataPoint(string data)
+        {
+
+            HeartDataPoint point = null;
+
+
+            string[] types = data.Split(";");
+            if (types.Length == 3)
+            {
+
+                List<HeartDataPoint> listRef;
+                HeartDataType dataType;
+
+                string type = types[0];
+                if (type == "HeartBeat")
+                {
+                    listRef = hdata_Beat;
+                    dataType = HeartDataType.HeartBeat;
+                }
+                else if (type == "HeartRate")
+                {
+                    listRef = hdata_Rate;
+                    dataType = HeartDataType.HeartRate;
+                }
+                else if (type == "StepCount")
+                {
+                    listRef = hdata_Steps;
+                    dataType = HeartDataType.StepCount;
+                }
+                else
+                {
+                    listRef = null;
+                    dataType = HeartDataType.None;
+                }
+
+                int value = 0;
+                bool wasNumber = Int32.TryParse(types[1], out value);
+                if (wasNumber && dataType != HeartDataType.None && listRef != null)
+                {
+                    //string dateString = date.ToString("o");
+                    DateTime restoredDate = DateTime.Parse(types[2], null, DateTimeStyles.RoundtripKind);
+
+                    point = new HeartDataPoint(dataType, value, restoredDate);
+
+                }
+
+            }
+            return point;
+        }
+
+
+
+
+        public void OnPeerConnected (INode peer)
 		{
 			LOGD (Tag, "OnPeerConencted: " + peer);
 			handler.Post (() => {
                 //dataItemListAdapter.Add(new Event("Connected", peer.ToString()));
-                statusTextView.Text = "Peer Connected";
+                RunOnUiThread(() =>
+                {
+                    statusTextView.Text = "Peer Connected";
+                });
+
             });
 		}
 
@@ -293,52 +370,14 @@ namespace DataLayer
 			LOGD (Tag, "OnPeerDisconnected: " + peer);
 			handler.Post (() => {
                 //dataItemListAdapter.Add(new Event("Disconnected", peer.ToString()));
-                statusTextView.Text = "Peer Disconnected";
+                RunOnUiThread(() =>
+                {
+                    statusTextView.Text = "Peer Disconnected";
+                });
             });
 		}
 
-		/// <summary>
-		/// A View Adapter for presenting the Event objects in a list
-		/// </summary>
-		private class DataItemAdapter : ArrayAdapter<Event> {
-			private readonly Context mContext;
-
-			public DataItemAdapter(Context context, int unusedResource) 
-				:base(context, unusedResource) {
-				mContext = context;
-			}
-			public override View GetView (int position, View convertView, ViewGroup parent)
-			{
-				ViewHolder holder;
-				if (convertView == null) {
-					holder = new ViewHolder ();
-					LayoutInflater inflater = (LayoutInflater)mContext.GetSystemService (Context.LayoutInflaterService);
-					convertView = inflater.Inflate (Android.Resource.Layout.TwoLineListItem, null);
-					convertView.Tag = holder;
-					holder.Text1 = (TextView)convertView.FindViewById (Android.Resource.Id.Text1);
-					holder.Text2 = (TextView)convertView.FindViewById (Android.Resource.Id.Text2);
-				} else {
-					holder = (ViewHolder)convertView.Tag;
-				}
-				Event e = GetItem (position);
-				holder.Text1.Text = e.Title;
-				holder.Text2.Text = e.Text;
-				return convertView;
-			}
-			private class ViewHolder : Java.Lang.Object {
-				public TextView Text1;
-				public TextView Text2;
-			}
-		}
-		public class Event {
-			public String Title, Text;
-
-			public Event(String title, String text) {
-				this.Title = title;
-				this.Text = text;
-			}
-		}
-
+		
 		ICollection<string> Nodes {
 			get {
 				HashSet<string> results = new HashSet<string> ();
@@ -355,11 +394,17 @@ namespace DataLayer
             var res = await WearableClass.MessageApi.SendMessageAsync (mGoogleApiClient, node, StartActivityPath, new byte[0]);
     		if (!res.Status.IsSuccess) {
 				Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
-                statusTextView.Text = "Failed to send signal";
+                RunOnUiThread(() =>
+                {
+                    statusTextView.Text = "Failed to send signal";
+                });
             }
             else
             {
-                statusTextView.Text = "Start signal sent";
+                RunOnUiThread(() =>
+                {
+                    statusTextView.Text = "Start signal sent";
+                });
             }
 		}
 

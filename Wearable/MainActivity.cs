@@ -18,7 +18,13 @@ using System.Text;
 using Android.Util;
 using Android.Content.PM;
 using System.Threading.Tasks;
+using Android;
 using Java.Interop;
+using Android.Hardware;
+using Android.Support.Design.Widget;
+using Android.Support.V4.App;
+using Android.Support.V4.Content;
+using Xamarin.Essentials;
 
 namespace Wearable
 {
@@ -34,7 +40,7 @@ namespace Wearable
 		IntentFilter( new string[]{ "com.example.android.wearable.datalayer.EXAMPLE" }, 
 			Categories = new string[]{ "android.intent.category.DEFAULT" })]
 	public class MainActivity : Activity, GoogleApiClient.IConnectionCallbacks, GoogleApiClient.IOnConnectionFailedListener, IDataApiDataListener,
-	IMessageApiMessageListener, INodeApiNodeListener
+	IMessageApiMessageListener, INodeApiNodeListener, Android.Hardware.ISensorEventListener
 	{
 		public const string Tag = "MainActivity";
 
@@ -46,31 +52,92 @@ namespace Wearable
 		Handler handler;
         View SendFunMessageBtn;
         private Button trackingBtn;
+
+        SensorManager sensorManager;
+        Sensor heartRatesensor;
+        Sensor heartBeatsensor;
+        Sensor stepCounter;
+
+        private Queue<HeartDataPoint> dataPoints;
+
         const string FunMessagePath = "/fun-message";
         const string DataPointPath = "/data-point";
+        const string DataPointsPath = "/data-points";
+        private int BODYSENSOR_CODE = 123;
         protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
 			handler = new Handler ();
-			DataLayerListenerService.LOGD (Tag, "OnCreate");
+			//DataLayerListenerService.LOGD (Tag, "OnCreate");
 			SetContentView (Resource.Layout.main_activity);
 			Window.AddFlags (WindowManagerFlags.KeepScreenOn);
-			
+
+            dataPoints = new Queue<HeartDataPoint>();
+
+            if (!checkPermissions())
+            {
+                ActivityCompat.RequestPermissions(this, new String[] { Manifest.Permission.BodySensors }, BODYSENSOR_CODE);
+            }
+
+
 			introText = (TextView)FindViewById (Resource.Id.intro);
 			layout = FindViewById (Resource.Id.layout);
             SendFunMessageBtn = FindViewById(Resource.Id.sendMessageBtn);
             trackingBtn = (Button) FindViewById(Resource.Id.trackingbutton);
-            // Stores data events received by the local broadcaster.
-            //dataItemList = (ListView)FindViewById(Resource.Id.dataItem_list);
-            //dataItemListAdapter = new DataItemAdapter (this, Android.Resource.Layout.SimpleListItem1);
-			//dataItemList.Adapter = dataItemListAdapter;
 
-			googleApiClient = new GoogleApiClient.Builder (this)
+            sensorManager = (SensorManager)GetSystemService(Context.SensorService);
+
+            if (sensorManager.GetSensorList(SensorType.HeartRate).Count > 0)
+            {
+                heartRatesensor = sensorManager.GetDefaultSensor(SensorType.HeartRate);
+            }
+            else
+            {
+                heartRatesensor = null;
+            }
+
+            if (sensorManager.GetSensorList(SensorType.HeartBeat).Count > 0)
+            {
+                heartBeatsensor = sensorManager.GetDefaultSensor(SensorType.HeartBeat);
+            }
+            else
+            {
+                heartBeatsensor = null;
+            }
+
+            if (sensorManager.GetSensorList(SensorType.StepCounter).Count > 0)
+            {
+                stepCounter = sensorManager.GetDefaultSensor(SensorType.StepCounter);
+            }
+            else
+            {
+                stepCounter = null;
+            }
+
+            if (heartRatesensor != null)
+            {
+                sensorManager.RegisterListener(this, heartRatesensor, SensorDelay.Fastest);
+            }
+            if (heartBeatsensor != null)
+            {
+                sensorManager.RegisterListener(this, heartBeatsensor, SensorDelay.Fastest);
+            }
+            if (stepCounter != null)
+            {
+                sensorManager.RegisterListener(this, stepCounter, SensorDelay.Fastest);
+            }
+
+            googleApiClient = new GoogleApiClient.Builder (this)
 				.AddApi (WearableClass.API)
 				.AddConnectionCallbacks (this)
 				.AddOnConnectionFailedListener (this)
 				.Build ();
 		}
+
+        private bool checkPermissions()
+        {
+            return ContextCompat.CheckSelfPermission(this, Manifest.Permission.BodySensors) == (int) Permission.Granted;
+        }
 
 		protected override void OnResume ()
 		{
@@ -270,7 +337,7 @@ namespace Wearable
         async Task SendFunMessage(String node)
         {
             var bytes = Encoding.Default.GetBytes("This is a fun message");
-            var res = await WearableClass.MessageApi.SendMessageAsync(googleApiClient, node, FunMessagePath, new byte[0]);
+            var res = await WearableClass.MessageApi.SendMessageAsync(googleApiClient, node, FunMessagePath, bytes);
             if (!res.Status.IsSuccess)
             {
                 Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
@@ -298,7 +365,7 @@ namespace Wearable
 
         public void OnMessageReceived (IMessageEvent ev)
 		{
-            DataLayerListenerService.LOGD(Tag, "OnMessageReceived: " + ev);
+            //DataLayerListenerService.LOGD(Tag, "OnMessageReceived: " + ev);
 
             if (ev.Path.Equals(FunMessagePath)){
                 trackingBtn.Visibility = ViewStates.Gone;
@@ -330,46 +397,184 @@ namespace Wearable
             introText.Text = "Disconnected";
         }
 
-  //      private class DataItemAdapter : ArrayAdapter<Event> {
-		//	private readonly Context mContext;
+        public void OnAccuracyChanged(Sensor sensor, [GeneratedEnum] SensorStatus accuracy)
+        {
+            if (sensor != null) 
+            {
+                Log.Debug("HH_TEST", "Accuracy changed for: " + sensor.Type);
+                //textView.Text = "Accuracy changed, sensor was: " + sensor.Type.ToString();
 
-		//	public DataItemAdapter(Context context, int unusedResource) 
-		//		:base(context, unusedResource) {
-		//		mContext = context;
-		//	}
-		//	public override View GetView (int position, View convertView, ViewGroup parent)
-		//	{
-		//		ViewHolder holder;
-		//		if (convertView == null) {
-		//			holder = new ViewHolder ();
-		//			LayoutInflater inflater = (LayoutInflater)mContext.GetSystemService (Context.LayoutInflaterService);
-		//			convertView = inflater.Inflate (Android.Resource.Layout.TwoLineListItem, null);
-		//			convertView.Tag = holder;
-		//			holder.Text1 = (TextView)convertView.FindViewById (Android.Resource.Id.Text1);
-		//			holder.Text2 = (TextView)convertView.FindViewById (Android.Resource.Id.Text2);
-		//		} else {
-		//			holder = (ViewHolder)convertView.Tag;
-		//		}
-		//		Event e = GetItem (position);
-		//		holder.Text1.Text = e.Title;
-		//		holder.Text2.Text = e.Text;
-		//		return convertView;
-		//	}
-		//	private class ViewHolder : Java.Lang.Object {
-		//		public TextView Text1;
-		//		public TextView Text2;
-		//	}
-		//}
+                if (stepCounter != null && sensor.Type == stepCounter.Type)
+                {
+                    
+                }
+                else if (heartBeatsensor != null && sensor.Type == heartBeatsensor.Type)
+                {
+                    
+                }
+                else if (heartRatesensor != null && sensor.Type == heartRatesensor.Type)
+                {
+                    
+                }
+            }
+        }
 
-		//public class Event {
-		//	public String Title, Text;
+        
+        public void OnSensorChanged(SensorEvent e)
+        {
+            if (e.Sensor != null)
+            {
+                //e.Values[0]
+                if (stepCounter != null && e.Sensor.Type == stepCounter.Type)
+                {
+                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.StepCount, (int) e.Values[0],DateTime.Now));
+                }
+                else if (heartBeatsensor != null && e.Sensor.Type == heartBeatsensor.Type)
+                {
+                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.HeartBeat, (int)e.Values[0], DateTime.Now));
+                }
+                else if (heartRatesensor != null && e.Sensor.Type == heartRatesensor.Type)
+                {
+                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.HeartRate, (int)e.Values[0], DateTime.Now));
+                }
 
-		//	public Event(String title, String text) {
-		//		this.Title = title;
-		//		this.Text = text;
-		//	}
-		//}
-	}
+                Log.Info("HH_TEST", "Datapoints Count: " + dataPoints.Count);
+
+                if (dataPoints.Count > 0)
+                {
+                    trySendData();
+                }
+
+                foreach (float val in e.Values)
+                {
+                    Log.Info("HH_TEST", "Type: "+ e.Sensor.Type + ", Float value: " + val.ToString());
+                }
+
+            }
+        }
+
+        private void trySendData()
+        {
+            string message = "";
+            Queue<HeartDataPoint> backupList = new Queue<HeartDataPoint>();
+            for (var i = 0; i < 100 && dataPoints.Count > 0; i++)
+            {
+                HeartDataPoint point = dataPoints.Dequeue();
+
+                backupList.Enqueue(point);
+
+                DateTime dateToSave = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
+                string dateString = point.timestamp.ToString("o");
+                string typeString = point.heartType.ToString("G");
+                string numberString = point.amount.ToString();
+                message += typeString + ";" + numberString + ";" + dateString;
+
+                if (i < 100 - 1 && dataPoints.Count > 0)
+                {
+                    message += "|";
+                }
+            }
+
+            var task = new SendMultipleDatapointsTask() { Activity = this, dataString = message, backup = backupList};
+            task.Execute();
+
+        }
+
+        class SendMultipleDatapointsTask : AsyncTask
+        {
+            public MainActivity Activity;
+            public string dataString;
+            public Queue<HeartDataPoint> backup;
+            protected override Java.Lang.Object DoInBackground(params Java.Lang.Object[] @params)
+            {
+                if (Activity != null)
+                {
+                    var nodes = Activity.Nodes;
+                    foreach (var node in nodes)
+                    {
+                        if (dataString != null && dataString != "")
+                        {
+                            Log.Info("HH_TEST", "Valid datastring: " + dataString);
+                            Activity.SendDataPointsMessage(node, dataString, backup);
+                        }
+                        else
+                        {
+                            Log.Info("HH_TEST", "Invalid datastring: " + dataString);
+                        }
+                        
+                    }
+                }
+                return null;
+            }
+        }
+
+
+        async Task SendDataPointsMessage(string node, string text, Queue<HeartDataPoint> backup)
+        {
+
+            var bytes = Encoding.Default.GetBytes(text);
+            var res = await WearableClass.MessageApi.SendMessageAsync(googleApiClient, node, DataPointsPath, bytes);
+            if (!res.Status.IsSuccess)
+            {
+                Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
+                Log.Info("HH_TEST", "Failed to send message, re-adding backup");
+                //re enqueue
+                while (backup.Count > 0)
+                {
+                    dataPoints.Enqueue(backup.Dequeue());
+                }
+                backup.Clear();
+                Log.Info("HH_TEST", "Backup added and cleared");
+            }
+
+        }
+
+        private class HeartDataPoint
+        {
+            public HeartDataType heartType { get; }
+            public int amount { get; set; }
+            public DateTime timestamp { get; }
+            public HeartDataPoint(HeartDataType heartType, int amount, DateTime timestamp)
+            {
+                this.heartType = heartType;
+                this.amount = amount;
+                this.timestamp = timestamp;
+            }
+
+        }
+
+
+
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+        {
+            if (requestCode == BODYSENSOR_CODE)
+            {
+                // Received permission result for camera permission.
+                Log.Info("HH_Info", "Received response for Body sensor permission request.");
+
+                // Check if the only required permission has been granted
+                if ((grantResults.Length == 1) && (grantResults[0] == Permission.Granted))
+                {
+                    // Body sensor permission has been granted, okay to retrieve the Sensor data of the device.
+                    Log.Info("HH_Info", "Body sensor permission has now been granted.");
+                    Snackbar.Make(layout, "Permission to see sensors granted", Snackbar.LengthShort).Show();
+                }
+                else
+                {
+                    Log.Info("HH_Info", "Body sensor permission was NOT granted.");
+                    Snackbar.Make(layout, "Permission was not granted, goodbye.", Snackbar.LengthShort).Show();
+                    var activity = (Activity)this;
+                    activity.FinishAffinity();
+                }
+            }
+            else
+            {
+                base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            }
+        }
+
+        
+    }
 }
 
 
