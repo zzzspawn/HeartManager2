@@ -2,44 +2,53 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-  <View
-        style="@style/Divider"
-        android:id="@+id/divider"
-        android:layout_below="@+id/top"
-        android:layout_marginTop="5dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp" />
+    android:layout_height="match_parent"
+    android:background="#181818"
+    android:theme="@android:style/Theme.Holo.NoActionBar"
+    >
 
     <Button
         android:id="@+id/start_wearable_activity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
         android:onClick="onStartWearableActivityClick"
         android:text="@string/start_wearable_activity"
         android:enabled="false"
-        android:layout_below="@+id/divider"
-        android:layout_marginTop="10dp"
-        android:textSize="15px" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:textSize="30px" />
     <Button
         android:id="@+id/SendMessageBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
         android:onClick="onSendMessageBtnClick"
-        android:text="Send Message"
+        android:text="Send Message(Test)"
         android:enabled="false"
-        android:layout_below="@+id/divider"
-        android:layout_toRightOf="@id/start_wearable_activity"
         android:layout_marginTop="10dp"
-        android:textSize="15px" />
+        android:textSize="30px" 
+        android:layout_alignParentLeft="true"    
+        android:layout_alignParentRight="true"    
+    />
 
-    <ListView
-        android:id="@+id/data_item_list"
+    <TextView
+        android:id="@+id/statusText"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/start_wearable_activity"
-        android:transcriptMode="alwaysScroll" />
+        android:layout_height="wrap_content"
+        android:layout_below="@id/SendMessageBtn"
+        android:text="StatusText"
+        android:textSize="56px"
+        android:textAlignment="center"
+    />
+
+    <ImageView
+        android:id="@+id/statusImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/heartlogo"
+        android:layout_below="@id/statusText"
+        android:layout_above="@id/start_wearable_activity"
+    />
+
+    
 </RelativeLayout>

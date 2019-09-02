@@ -7,25 +7,34 @@
       android:id="@+id/sendMessageBtn"
       android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send message"
+        android:text="Send message (Test)"
         android:onClick="onSendMessageBtnClick"
         android:enabled="false"
     />
-    <ListView
-        android:id="@+id/dataItem_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:transcriptMode="alwaysScroll"/>
 
     <TextView
         android:id="@+id/intro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:textSize="20sp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:gravity="center"
         android:fontFamily="sans-serif-condensed-light"
-        android:text="@string/intro" />
+        android:text="Connecting.." 
+        android:layout_marginBottom="30dp"    
+    />
+
+
+    <Button
+        android:id="@+id/trackingbutton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:enabled="false"
+        android:visibility="invisible"
+        android:text="Start Tracking"
+        android:onClick="onStartTracking"
+    />
+
 </RelativeLayout>

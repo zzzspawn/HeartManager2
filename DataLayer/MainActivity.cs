@@ -11,6 +11,7 @@ using Android.Graphics;
 using Java.Util.Concurrent;
 using Android.Gms.Wearable;
 using System.Collections.Generic;
+using System.Globalization;
 using Android.Gms.Common.Data;
 using Java.Interop;
 using Android.Provider;
@@ -43,17 +44,23 @@ namespace DataLayer
 		const string CountPath = "/count";
         const string CountKey = "count";
         const string FunMessagePath = "/fun-message";
+        const string DataPointPath = "/data-point";
 
-		GoogleApiClient mGoogleApiClient;
+        GoogleApiClient mGoogleApiClient;
 		bool mResolvingError = false;
 
-        ListView dataItemList;
+        //ListView dataItemList;
         View startActivityBtn;
         View SendFunMessageBtn;
+        private TextView statusTextView;
 
-        private DataItemAdapter dataItemListAdapter;
-		private Handler handler;
-        
+        //private DataItemAdapter dataItemListAdapter;
+        private Handler handler;
+
+        private List<HeartDataPoint> hdata_Rate;
+        private List<HeartDataPoint> hdata_Beat;
+        private List<HeartDataPoint> hdata_Steps;
+
 
         protected override void OnCreate (Bundle bundle)
 		{
@@ -62,10 +69,11 @@ namespace DataLayer
 			LOGD (Tag, "OnCreate");
             SetContentView (Resource.Layout.main_activity);
 			SetupViews ();
+            SetupLists();
 
 			// Stores DataItems received by the local broadcaster of from the paired watch
-			dataItemListAdapter = new DataItemAdapter (this, Android.Resource.Layout.SimpleListItem1);
-			dataItemList.Adapter = dataItemListAdapter;
+			//dataItemListAdapter = new DataItemAdapter (this, Android.Resource.Layout.SimpleListItem1);
+			//dataItemList.Adapter = dataItemListAdapter;
 
             mGoogleApiClient = new GoogleApiClient.Builder (this)
 				.AddApi (WearableClass.API)
@@ -86,17 +94,31 @@ namespace DataLayer
 			base.OnStart ();
 			if (!mResolvingError) {
 				mGoogleApiClient.Connect ();
-			}
+                statusTextView.Text = "Connecting";
+            }
 		}
 
 		protected override void OnResume ()
 		{
 			base.OnResume ();
+            if (!mResolvingError)
+            {
+                mGoogleApiClient.Connect();
+                statusTextView.Text = "Connecting";
+            }
         }
 
-		protected override void OnPause ()
+		protected override async void OnPause ()
 		{
 			base.OnPause ();
+            if (!mResolvingError)
+            {
+                await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
+                await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
+                await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
+                mGoogleApiClient.Disconnect();
+                statusTextView.Text = "Disconnecting";
+            }
         }
 
 		protected override async void OnStop ()
@@ -107,7 +129,8 @@ namespace DataLayer
                 await WearableClass.MessageApi.RemoveListenerAsync (mGoogleApiClient, this);
                 await WearableClass.NodeApi.RemoveListenerAsync (mGoogleApiClient, this);
 				mGoogleApiClient.Disconnect ();
-			}
+                statusTextView.Text = "Disconnecting";
+            }
 		}
 
 		public async void OnConnected (Bundle connectionHint)
@@ -119,13 +142,15 @@ namespace DataLayer
             await WearableClass.DataApi.AddListenerAsync (mGoogleApiClient, this);
 			await WearableClass.MessageApi.AddListenerAsync (mGoogleApiClient, this);
 			await WearableClass.NodeApi.AddListenerAsync (mGoogleApiClient, this);
-		}
+            statusTextView.Text = "Connected";
+        }
 
 		public void OnConnectionSuspended (int cause)
 		{
 			LOGD (Tag, "Connection to Google API client was suspended");
 			startActivityBtn.Enabled = false;
             SendFunMessageBtn.Enabled = false;
+            statusTextView.Text = "Connection Suspended";
         }
 
 		public async void OnConnectionFailed (Android.Gms.Common.ConnectionResult result)
@@ -140,7 +165,8 @@ namespace DataLayer
 				} catch (IntentSender.SendIntentException e) {
 					// There was an error with the resolution intent. Try again.
 					mGoogleApiClient.Connect ();
-				} 
+                    statusTextView.Text = "Connecting";
+                } 
 			} else {
 				Log.Error(Tag, "Connection to Google API client has failed");
 				mResolvingError = false;
@@ -149,7 +175,8 @@ namespace DataLayer
                 await WearableClass.DataApi.RemoveListenerAsync (mGoogleApiClient, this);
 				await WearableClass.MessageApi.RemoveListenerAsync (mGoogleApiClient, this);
 				await WearableClass.NodeApi.RemoveListenerAsync (mGoogleApiClient, this);
-			}
+                statusTextView.Text = "Connection Failed";
+            }
 		}
 
         public void OnDataChanged(DataEventBuffer dataEvents)
@@ -163,13 +190,13 @@ namespace DataLayer
                 {
                     if (ev.Type == DataEvent.TypeChanged)
                     {
-                        dataItemListAdapter.Add(
-                            new Event("DataItem Changed", ev.DataItem.ToString()));
+                        //dataItemListAdapter.Add(
+                        //    new Event("DataItem Changed", ev.DataItem.ToString()));
                     }
                     else if (ev.Type == DataEvent.TypeDeleted)
                     {
-                        dataItemListAdapter.Add(
-                            new Event("DataItem Deleted", ev.DataItem.ToString()));
+                        //dataItemListAdapter.Add(
+                        //    new Event("DataItem Deleted", ev.DataItem.ToString()));
                     }
                 }
             });
@@ -186,7 +213,63 @@ namespace DataLayer
 			handler.Post( () => {
                 if (messageEvent.Path == FunMessagePath)
                 {
-                    dataItemListAdapter.Add(new Event("Manual message from watch", messageEvent.ToString()));
+                    //dataItemListAdapter.Add(new Event("Manual message from watch", messageEvent.ToString()));
+                    statusTextView.Text = "Fun message received";
+                }
+                else if (messageEvent.Path == DataPointPath)
+                {
+                    //dataItemListAdapter.Add(new Event("Manual message from watch", messageEvent.ToString()));
+                    var buffer = messageEvent.GetData();
+                    string initialMessage = Encoding.Default.GetString(buffer, 0, buffer.Length);
+                    string[] types = initialMessage.Split(";");
+                    if (types.Length == 3)
+                    {
+                        
+                        List<HeartDataPoint> listRef;
+                        HeartDataType dataType;
+                        
+                        string type = types[0];
+                        if (type == "HeartBeat")
+                        {
+                            listRef = hdata_Beat;
+                            dataType = HeartDataType.HeartBeat;
+                        }else if (type == "HeartRate")
+                        {
+                            listRef = hdata_Rate;
+                            dataType = HeartDataType.HeartRate;
+                        }
+                        else if (type == "StepCount")
+                        {
+                            listRef = hdata_Steps;
+                            dataType = HeartDataType.StepCount;
+                        }
+                        else
+                        {
+                            listRef = null;
+                            dataType = HeartDataType.None;
+                        }
+
+                        int value = 0;
+                        bool wasNumber = Int32.TryParse(types[1], out value);
+                        if (wasNumber && dataType != HeartDataType.None && listRef != null)
+                        {
+                            //string dateString = date.ToString("o");
+                            DateTime restoredDate = DateTime.Parse(types[2], null, DateTimeStyles.RoundtripKind);
+
+                            listRef.Add(new HeartDataPoint(dataType, value, restoredDate));
+
+                            statusTextView.Text = "Data received(" + dataType + ", " + value + ", " + restoredDate + ").";
+                        }
+                        else
+                        {
+                            statusTextView.Text = "Invalid data received";
+                        }
+                        
+                    }
+                    else
+                    {
+                        statusTextView.Text = "Invalid data received";
+                    }
                 }
                 else
                 {
@@ -200,16 +283,18 @@ namespace DataLayer
 		{
 			LOGD (Tag, "OnPeerConencted: " + peer);
 			handler.Post (() => {
-				dataItemListAdapter.Add(new Event("Connected", peer.ToString()));
-			});
+                //dataItemListAdapter.Add(new Event("Connected", peer.ToString()));
+                statusTextView.Text = "Peer Connected";
+            });
 		}
 
 		public void OnPeerDisconnected (INode peer)
 		{
 			LOGD (Tag, "OnPeerDisconnected: " + peer);
 			handler.Post (() => {
-				dataItemListAdapter.Add(new Event("Disconnected", peer.ToString()));
-			});
+                //dataItemListAdapter.Add(new Event("Disconnected", peer.ToString()));
+                statusTextView.Text = "Peer Disconnected";
+            });
 		}
 
 		/// <summary>
@@ -270,7 +355,12 @@ namespace DataLayer
             var res = await WearableClass.MessageApi.SendMessageAsync (mGoogleApiClient, node, StartActivityPath, new byte[0]);
     		if (!res.Status.IsSuccess) {
 				Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
-			}	
+                statusTextView.Text = "Failed to send signal";
+            }
+            else
+            {
+                statusTextView.Text = "Start signal sent";
+            }
 		}
 
 		class StartWearableActivityTask : AsyncTask
@@ -370,27 +460,36 @@ namespace DataLayer
 			}
 		}
 
-		
+        
 
         /// <summary>
 		/// Sets up UI components and their callback handlers
 		/// </summary>
 		void SetupViews() 
 		{
-            dataItemList = (ListView)FindViewById (Resource.Id.data_item_list);
+            //dataItemList = (ListView)FindViewById (Resource.Id.data_item_list);
 
 			startActivityBtn = FindViewById (Resource.Id.start_wearable_activity);
 
             SendFunMessageBtn = FindViewById(Resource.Id.SendMessageBtn);
 
+            statusTextView = (TextView) FindViewById(Resource.Id.statusText);
+
         }
 
-		/// <summary>
-		/// A simple wrapper around Log.Debug
-		/// </summary>
-		/// <param name="tag">Tag</param>
-		/// <param name="message">Message to log</param>
-		static void LOGD(string tag, string message) 
+        void SetupLists()
+        {
+            hdata_Beat = new List<HeartDataPoint>();
+            hdata_Rate = new List<HeartDataPoint>();
+            hdata_Steps = new List<HeartDataPoint>();
+        }
+
+        /// <summary>
+        /// A simple wrapper around Log.Debug
+        /// </summary>
+        /// <param name="tag">Tag</param>
+        /// <param name="message">Message to log</param>
+        static void LOGD(string tag, string message) 
 		{
 			if (Log.IsLoggable(tag, LogPriority.Debug)) {
 				Log.Debug(tag, message);
@@ -399,9 +498,10 @@ namespace DataLayer
 
         private enum HeartDataType
         {
+            None,
             HeartBeat,
             HeartRate,
-            Steps//test type for quick data
+            StepCount//test type for quick data
         }
 
         private class HeartDataPoint
@@ -415,7 +515,6 @@ namespace DataLayer
                 this.amount = amount;
                 this.timestamp = timestamp;
             }
-
 
         }
 

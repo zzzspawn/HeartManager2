@@ -25,6 +25,7 @@ namespace Wearable
 		public const string DataItemReceivedPath = "/data-item-received";
 		public const string CountPath = "/count";
         public const string FunMessagePath = "/fun-message";
+        const string DataPointPath = "/data-point";
 
         const string ContKey = "count";
 		const int MaxLogTagLength = 23;

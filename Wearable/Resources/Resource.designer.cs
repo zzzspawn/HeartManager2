@@ -1216,9 +1216,6 @@ namespace Wearable
 			// aapt resource value: 0x7f0e0010
 			public const int dark = 2131623952;
 			
-			// aapt resource value: 0x7f0e003c
-			public const int dataItem_list = 2131623996;
-			
 			// aapt resource value: 0x7f0e0039
 			public const int dismiss_overlay_button = 2131623993;
 			
@@ -1261,8 +1258,8 @@ namespace Wearable
 			// aapt resource value: 0x7f0e004e
 			public const int info = 2131624014;
 			
-			// aapt resource value: 0x7f0e003d
-			public const int intro = 2131623997;
+			// aapt resource value: 0x7f0e003c
+			public const int intro = 2131623996;
 			
 			// aapt resource value: 0x7f0e002c
 			public const int italic = 2131623980;
@@ -1362,6 +1359,9 @@ namespace Wearable
 			
 			// aapt resource value: 0x7f0e0016
 			public const int top = 2131623958;
+			
+			// aapt resource value: 0x7f0e003d
+			public const int trackingbutton = 2131623997;
 			
 			// aapt resource value: 0x7f0e0033
 			public const int wearable_support_action_drawer_expand_icon = 2131623987;
