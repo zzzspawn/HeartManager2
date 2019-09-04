@@ -417,9 +417,6 @@ namespace DataLayer
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f0a0016
-			public const int SendMessageBtn = 2131361814;
-			
 			// aapt resource value: 0x7f0a001c
 			public const int action0 = 2131361820;
 			
@@ -458,6 +455,9 @@ namespace DataLayer
 			
 			// aapt resource value: 0x7f0a0025
 			public const int chronometer = 2131361829;
+			
+			// aapt resource value: 0x7f0a0015
+			public const int connectionStatusText = 2131361813;
 			
 			// aapt resource value: 0x7f0a000e
 			public const int dark = 2131361806;
@@ -522,14 +522,14 @@ namespace DataLayer
 			// aapt resource value: 0x7f0a000b
 			public const int standard = 2131361803;
 			
-			// aapt resource value: 0x7f0a0015
-			public const int start_wearable_activity = 2131361813;
+			// aapt resource value: 0x7f0a0017
+			public const int start_wearable_activity = 2131361815;
 			
 			// aapt resource value: 0x7f0a0018
 			public const int statusImage = 2131361816;
 			
-			// aapt resource value: 0x7f0a0017
-			public const int statusText = 2131361815;
+			// aapt resource value: 0x7f0a0016
+			public const int statusText = 2131361814;
 			
 			// aapt resource value: 0x7f0a001e
 			public const int status_bar_latest_event_content = 2131361822;
