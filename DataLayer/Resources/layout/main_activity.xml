@@ -38,7 +38,28 @@
       android:layout_alignParentBottom="true"
       android:layout_alignParentLeft="true"
       android:layout_alignParentRight="true"
-      android:textSize="30px" />
+      android:textSize="30px" 
+      android:visibility="gone"  
+    />
+
+    <Button
+        android:id="@+id/savetofilebtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save data to file"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:onClick="onSaveToFileClicked"
+    />
+    <Button
+        android:id="@+id/toggleChartBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Toggle chart"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:onClick="onToggleChartClicked"
+    />
 
     <ImageView
         android:id="@+id/statusImage"
@@ -46,7 +67,16 @@
         android:layout_height="wrap_content"
         android:src="@drawable/heartlogo"
         android:layout_below="@id/statusText"
-        android:layout_above="@id/start_wearable_activity"
+        android:layout_above="@id/savetofilebtn"
+    />
+
+    <Microcharts.Droid.ChartView
+        android:id="@+id/linechart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/statusText"
+        android:layout_above="@id/savetofilebtn"
+        android:visibility="gone"
     />
 
     

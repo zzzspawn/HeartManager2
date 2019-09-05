@@ -53,7 +53,6 @@ namespace Wearable
 		View layout;
 		Handler handler;
         View SendFunMessageBtn;
-        private Button trackingBtn;
 
         SensorManager sensorManager;
         Sensor heartRatesensor;
@@ -90,6 +89,32 @@ namespace Wearable
 				.AddOnConnectionFailedListener (this)
 				.Build ();
 		}
+        protected override void OnResume()
+        {
+            base.OnResume();
+            debugLog("App Resumed");
+            if (!googleApiClient.IsConnected && !googleApiClient.IsConnecting)
+            {
+                googleApiClient.Connect();
+                introText.Text = "Connecting";
+                debugLog("Connecting");
+                WearableClass.DataApi.AddListener(googleApiClient, this);
+            }
+            introText.Visibility = ViewStates.Visible;
+        }
+        protected override void OnPause()
+        {
+            base.OnPause();
+            debugLog("Pausing App");
+
+            introText.Visibility = ViewStates.Visible;
+            if (googleApiClient.IsConnected)
+            {
+                googleApiClient.Disconnect();
+                debugLog("Disconnecting");
+                introText.Text = "Disconnecting";
+            }
+        }
 
         private void setUpPermissions()
         {
@@ -104,38 +129,12 @@ namespace Wearable
                 debugLog("Permissions exist and allow use");
             }
         }
-
         private void setUpViews()
         {
             introText = (TextView)FindViewById(Resource.Id.intro);
             layout = FindViewById(Resource.Id.layout);
             SendFunMessageBtn = FindViewById(Resource.Id.sendMessageBtn);
-            trackingBtn = (Button)FindViewById(Resource.Id.trackingbutton);
         }
-
-        private void startSensorTracking()
-        {
-            if (heartRatesensor != null)
-            {
-                sensorManager.RegisterListener(this, heartRatesensor, SensorDelay.Fastest);
-            }
-            if (heartBeatsensor != null)
-            {
-                sensorManager.RegisterListener(this, heartBeatsensor, SensorDelay.Fastest);
-            }
-            if (stepCounter != null)
-            {
-                sensorManager.RegisterListener(this, stepCounter, SensorDelay.Fastest);
-            }
-        }
-        private void endSensorTracking()
-        {
-            if (heartRatesensor != null)
-            {
-                sensorManager.UnregisterListener(this);
-            }
-        }
-
         private void setUpSensors()
         {
             sensorManager = (SensorManager)GetSystemService(Context.SensorService);
@@ -167,88 +166,72 @@ namespace Wearable
                 stepCounter = null;
             }
         }
-
+        private void startSensorTracking()
+        {
+            if (heartRatesensor != null)
+            {
+                sensorManager.RegisterListener(this, heartRatesensor, SensorDelay.Fastest);
+            }
+            if (heartBeatsensor != null)
+            {
+                sensorManager.RegisterListener(this, heartBeatsensor, SensorDelay.Fastest);
+            }
+            if (stepCounter != null)
+            {
+                sensorManager.RegisterListener(this, stepCounter, SensorDelay.Fastest);
+            }
+        }
+        private void stopSensorTracking()
+        {
+            if (heartRatesensor != null)
+            {
+                sensorManager.UnregisterListener(this);
+            }
+        }
         private void debugLog(string text)
         {
             Log.Info("HH_TEST", text);
         }
-
         private bool checkPermissions()
         {
             return ContextCompat.CheckSelfPermission(this, Manifest.Permission.BodySensors) == (int) Permission.Granted;
         }
-
-		protected override void OnResume ()
-		{
-			base.OnResume ();
-            debugLog("App Resumed");
-            if (!googleApiClient.IsConnected)
-            {
-                googleApiClient.Connect();
-                introText.Text = "Connecting";
-                debugLog("Connecting");
-            }
-            
-            trackingBtn.Visibility = ViewStates.Gone;
-            trackingBtn.Enabled = false;
-            introText.Visibility = ViewStates.Visible;
-            
-            
-        }
-
-		protected override void OnPause ()
-		{
-			base.OnPause ();
-            debugLog("Pausing App");
-            WearableClass.DataApi.RemoveListener(googleApiClient, this);
-            //await WearableClass.MessageApi.RemoveListenerAsync (googleApiClient, this);
-            //await WearableClass.NodeApi.RemoveListenerAsync (googleApiClient, this);
-
-            trackingBtn.Visibility = ViewStates.Gone;
-            trackingBtn.Enabled = false;
-            introText.Visibility = ViewStates.Visible;
-            if (googleApiClient.IsConnected)
-            {
-                googleApiClient.Disconnect();
-                debugLog("Disconnecting");
-                introText.Text = "Disconnecting";
-            }
-        }
-
-		public void OnConnected (Bundle bundle)
+        
+        public void OnConnected (Bundle bundle)
 		{
             debugLog("Connection established");
             WearableClass.DataApi.AddListener(googleApiClient, this);
-            //await WearableClass.MessageApi.AddListenerAsync (googleApiClient, this);
-            //await WearableClass.NodeApi.AddListenerAsync (googleApiClient, this);
-
             introText.Visibility = ViewStates.Gone;
-            trackingBtn.Visibility = ViewStates.Visible;
-            trackingBtn.Enabled = true;
             SendFunMessageBtn.Enabled = true;
         }
-
-		public void OnConnectionSuspended (int p0)
+        public void OnConnectionSuspended (int p0)
 		{
             debugLog("Connection suspended");
             WearableClass.DataApi.RemoveListener(googleApiClient, this);
 
             SendFunMessageBtn.Enabled = false;
-            trackingBtn.Visibility = ViewStates.Gone;
-            trackingBtn.Enabled = false;
             introText.Visibility = ViewStates.Visible;
             introText.Text = "Connection Suspended";
             
         }
-
-		public void OnConnectionFailed (Android.Gms.Common.ConnectionResult result)
+        public void OnConnectionFailed (Android.Gms.Common.ConnectionResult result)
 		{
             debugLog("Connection failed");
+            WearableClass.DataApi.RemoveListener(googleApiClient, this);
             SendFunMessageBtn.Enabled = false;
-            trackingBtn.Visibility = ViewStates.Gone;
-            trackingBtn.Enabled = false;
             introText.Visibility = ViewStates.Visible;
             introText.Text = "Connection Failed";
+        }
+        public void OnPeerConnected(INode node)
+        {
+            debugLog("Peer connected");
+            introText.Visibility = ViewStates.Gone;
+        }
+        public void OnPeerDisconnected(INode node)
+        {
+            debugLog("Peer disconnected");
+            introText.Visibility = ViewStates.Visible;
+            introText.Text = "Disconnected";
         }
 
         public void OnDataChanged(DataEventBuffer dataEvents)
@@ -282,37 +265,8 @@ namespace Wearable
         [Export("onSendMessageBtnClick")]
         public void onSendMessageBtnClick(View view)
         {
-
-            
-            //debugLog("Send Message clicked");
-            //// Trigger an AsyncTask that will query for a list of connected noded and send a "fun" message to each connecte node
-            //var task = new SendMessageTask() { Activity = this };
-            //task.Execute();
             SendData("This is a fun message",FunMessagePath);
         }
-
-        //class SendMessageTask : AsyncTask
-        //{
-        //    public MainActivity Activity;
-        //    protected override Java.Lang.Object DoInBackground(params Java.Lang.Object[] @params)
-        //    {
-        //        Log.Info("HH_TEST","Trying to Send Message");
-        //        if (Activity != null)
-        //        {
-        //            Log.Info("HH_TEST", "Activity was not null");
-        //            var nodes = Activity.Nodes;
-        //            foreach (var node in nodes)
-        //            {
-        //                Activity.SendFunMessage(node);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            Log.Info("HH_TEST", "Activity was null");
-        //        }
-        //        return null;
-        //    }
-        //}
 
         /// <summary>
         /// Sends an RPC to start a fullscreen Activity on the wearable
@@ -326,43 +280,23 @@ namespace Wearable
 
             startSensorTracking();
 
-            DateTime dateToSave = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-            string dateString = dateToSave.ToString("o");
-            string message;
-            message = HeartDataType.StepCount.ToString("G") + ";" + "10" + ";" + dateString;
-            SendData(message, DataPointPath);
+            //DateTime dateToSave = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
+            //string dateString = dateToSave.ToString("o");
+            //string message;
+            //message = HeartDataType.StepCount.ToString("G") + ";" + "10" + ";" + dateString;
+            //SendData(message, DataPointPath);
         }
 
-
-        //public void onSendDatapoint(HeartDataType dataType, int value)
-        //{
-        //    debugLog("Sending datapoint, values: Type: " + dataType.ToString("G") + ", Numbervalue: " + value.ToString());
-        //    // Trigger an AsyncTask that will query for a list of connected noded and send a "fun" message to each connecte node
-        //    var task = new SendDatapointTask() { Activity = this, heartDataType = dataType, numbervalue = value };
-        //    task.Execute();
-
-        //}
-
-        //class SendDatapointTask : AsyncTask
-        //{
-        //    public MainActivity Activity;
-        //    public HeartDataType heartDataType;
-        //    public int numbervalue;
-
-        //    protected override Java.Lang.Object DoInBackground(params Java.Lang.Object[] @params)
-        //    {
-        //        if (Activity != null)
-        //        {
-        //            var nodes = Activity.Nodes;
-        //            foreach (var node in nodes)
-        //            {
-        //                Activity.SendDataPointMessage(node, heartDataType, numbervalue);
-        //            }
-        //        }
-        //        return null;
-        //    }
-        //}
-
+        /// <summary>
+        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// </summary>
+        /// <param name="view"></param>
+        [Export("onStopTracking")]
+        public void onStopTracking(View view)
+        {
+            debugLog("Start tracking clicked");
+            stopSensorTracking();
+        }
 
         public enum HeartDataType
         {
@@ -370,108 +304,6 @@ namespace Wearable
             HeartBeat,
             HeartRate,
             StepCount//test type for quick data
-        }
-
-        //async Task SendDataPointMessage(string node, HeartDataType dataType, int number)
-        //{
-        //    debugLog("Sending datapoint: Type: " + dataType.ToString("G") + ", Value: " + number.ToString());
-        //    string message = "";
-        //    DateTime dateToSave = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-        //    string dateString = dateToSave.ToString("o");
-        //    string typeString = dataType.ToString("G");
-        //    string numberString = number.ToString();
-        //    message = typeString + ";" + numberString + ";" + dateString;
-
-
-        //    var bytes = Encoding.Default.GetBytes(message);
-        //    var res = await WearableClass.MessageApi.SendMessageAsync(googleApiClient, node, DataPointPath, bytes);
-        //    if (!res.Status.IsSuccess)
-        //    {
-        //        debugLog("Failed to send datapoint message");
-        //        Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
-
-        //    }
-        //    else
-        //    {
-        //        debugLog("Successfully sent datapoint message");
-        //    }
-
-        //}
-
-        
-
-
-        //async Task SendFunMessage(String node)
-        //{
-        //    var bytes = Encoding.Default.GetBytes("This is a fun message");
-        //    var res = await WearableClass.MessageApi.SendMessageAsync(googleApiClient, node, FunMessagePath, bytes);
-        //    if (!res.Status.IsSuccess)
-        //    {
-        //        Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
-        //        debugLog("Failed to send Fun message");
-        //    }
-        //    else
-        //    {
-        //        debugLog("Fun message sent");
-        //    }
-        //    trackingBtn.Visibility = ViewStates.Visible;
-        //    trackingBtn.Enabled = true;
-        //    introText.Visibility = ViewStates.Gone;
-        //}
-
-        //ICollection<string> Nodes
-        //{
-        //    get
-        //    {
-        //        HashSet<string> results = new HashSet<string>();
-        //        var nodes = WearableClass.NodeApi.GetConnectedNodesAsync(googleApiClient).Result;
-
-        //        foreach (var node in nodes.Nodes)
-        //        {
-        //            results.Add(node.Id);
-        //        }
-        //        return results;
-        //    }
-        //}
-
-
-        public void OnMessageReceived (IMessageEvent ev)
-		{
-            debugLog("Message received");
-            //DataLayerListenerService.LOGD(Tag, "OnMessageReceived: " + ev);
-
-            if (ev.Path.Equals(FunMessagePath)){
-                debugLog("Path Matched FunMessage");
-                trackingBtn.Visibility = ViewStates.Gone;
-                trackingBtn.Enabled = false;
-                introText.Visibility = ViewStates.Visible;
-                introText.Text = "Fun message received";
-            }
-            else
-            {
-                debugLog("No match found for message path");
-                //GenerateEvent("Message", ev.ToString());
-            }
-        }
-
-		public void OnPeerConnected (INode node)
-		{
-            debugLog("Peer connected");
-            //GenerateEvent ("Node Connected", node.Id);
-            trackingBtn.Visibility = ViewStates.Visible;
-            trackingBtn.Enabled = true;
-            introText.Visibility = ViewStates.Gone;
-            //introText.Text = "Connection Failed";
-        }
-
-		public void OnPeerDisconnected (INode node)
-		{
-            debugLog("Peer disconnected");
-            //GenerateEvent ("Node disonnected", node.Id);
-            trackingBtn.Visibility = ViewStates.Gone;
-            trackingBtn.Enabled = false;
-            introText.Visibility = ViewStates.Visible;
-            introText.Text = "Disconnected";
         }
 
         public void OnAccuracyChanged(Sensor sensor, [GeneratedEnum] SensorStatus accuracy)
@@ -496,8 +328,6 @@ namespace Wearable
                 }
             }
         }
-
-        
         public void OnSensorChanged(SensorEvent e)
         {
             debugLog("Sensor Changed");
@@ -538,7 +368,6 @@ namespace Wearable
 
             }
         }
-
         private void trySendData()
         {
             string message = "";
@@ -561,13 +390,9 @@ namespace Wearable
                 }
             }
 
-
             if (message != null && message != "")
             {
                 debugLog("Sending multiple datapoints");
-                //var task = new SendMultipleDatapointsTask() { Activity = this, dataString = message, backup = backupList};
-                //task.Execute();
-
                 SendData(message, DataPointsPath);
             }
             else
@@ -577,9 +402,7 @@ namespace Wearable
             
 
         }
-
         //Alternate universe data sending START
-
         public void SendData(string data, string path)
         {
             try
@@ -596,59 +419,7 @@ namespace Wearable
             }
 
         }
-
         //Alternate universe data sending END
-
-        //class SendMultipleDatapointsTask : AsyncTask
-        //{
-        //    public MainActivity Activity;
-        //    public string dataString;
-        //    public Queue<HeartDataPoint> backup;
-        //    protected override Java.Lang.Object DoInBackground(params Java.Lang.Object[] @params)
-        //    {
-        //        if (Activity != null)
-        //        {
-        //            var nodes = Activity.Nodes;
-        //            foreach (var node in nodes)
-        //            {
-        //                if (dataString != null && dataString != "")
-        //                {
-                            
-        //                    Log.Info("HH_TEST", "Valid datastring(So sending now): " + dataString);
-        //                    Activity.SendDataPointsMessage(node, dataString, backup);
-        //                }
-        //                else
-        //                {
-        //                    Log.Info("HH_TEST", "Invalid datastring(So not sending): " + dataString);
-        //                }
-                        
-        //            }
-        //        }
-        //        return null;
-        //    }
-        //}
-
-
-        //async Task SendDataPointsMessage(string node, string text, Queue<HeartDataPoint> backup)
-        //{
-
-        //    var bytes = Encoding.Default.GetBytes(text);
-        //    var res = await WearableClass.MessageApi.SendMessageAsync(googleApiClient, node, DataPointsPath, bytes);
-        //    if (!res.Status.IsSuccess)
-        //    {
-        //        Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
-        //        debugLog("Failed to send message, re-adding backup to queue");
-        //        //re enqueue
-        //        while (backup.Count > 0)
-        //        {
-        //            dataPoints.Enqueue(backup.Dequeue());
-        //        }
-        //        backup.Clear();
-        //        debugLog("Backup added and cleared");
-        //    }
-
-        //}
-
         private class HeartDataPoint
         {
             public HeartDataType heartType { get; }
@@ -662,9 +433,6 @@ namespace Wearable
             }
 
         }
-
-
-
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             if (requestCode == BODYSENSOR_CODE)
@@ -693,8 +461,10 @@ namespace Wearable
                 base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
             }
         }
-
-        
+        public void OnMessageReceived(IMessageEvent ev)
+        {
+            debugLog("Message received(This shouldn't happen anymore)");
+        }
     }
 }
 

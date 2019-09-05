@@ -5,11 +5,12 @@
     android:layout_height="fill_parent">
     <Button
       android:id="@+id/sendMessageBtn"
-      android:layout_width="match_parent"
+      android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send message (Test)"
         android:onClick="onSendMessageBtnClick"
         android:enabled="false"
+        android:layout_centerHorizontal="true"
     />
 
     <TextView
@@ -24,17 +25,23 @@
         android:layout_marginBottom="30dp"    
     />
 
-
     <Button
         android:id="@+id/trackingbutton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:enabled="false"
-        android:visibility="invisible"
         android:text="Start Tracking"
         android:onClick="onStartTracking"
+    />
+    <Button
+      android:id="@+id/trackingbuttonstop"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_centerHorizontal="true"
+      android:layout_below="@id/trackingbutton"
+      android:text="Stop Tracking"
+      android:onClick="onStopTracking"
     />
 
 </RelativeLayout>
