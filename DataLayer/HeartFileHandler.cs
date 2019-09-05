@@ -18,6 +18,8 @@ namespace DataLayer
     class HeartFileHandler
     {
         public const string FILENAME_STEPS = "stepsdata.json";
+        public const string FILENAME_HEARTRATE = "hratedata.json";
+        public const string FILENAME_HEARTBEAT = "hbeatdata.json";
 
         public static Task<List<HeartDataPoint>> getData(string filename)
         {
@@ -55,6 +57,7 @@ namespace DataLayer
             await storeDataPointsTask(existingData, filename);
         }
 
+        
 
         private static async Task<List<HeartDataPoint>> ReadDataPointsTask(string fileName)
         {
@@ -232,6 +235,40 @@ namespace DataLayer
             else
             {
                 HeartDebugHandler.debugLog("No data to write, operation cancelled");
+            }
+        }
+
+        public static void DeleteHeartRateData()
+        {
+            DeleteDataFile(FILENAME_HEARTRATE);
+        }
+
+        internal static void DeleteHeartBeatData()
+        {
+            DeleteDataFile(FILENAME_HEARTBEAT);
+        }
+
+        internal static void DeleteStepsData()
+        {
+            DeleteDataFile(FILENAME_STEPS);
+        }
+
+        internal static void DeleteAllData()
+        {
+            DeleteDataFile(FILENAME_HEARTRATE);
+            DeleteDataFile(FILENAME_HEARTBEAT);
+            DeleteDataFile(FILENAME_STEPS);
+        }
+
+        private static void DeleteDataFile(string filename)
+        {
+            string fileString = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), filename);
+
+            Java.IO.File file = new Java.IO.File(fileString);
+            if (file.Exists())
+            {
+                HeartDebugHandler.debugLog("File exists, deleting");
+                file.Delete();
             }
         }
 

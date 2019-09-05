@@ -367,43 +367,46 @@ namespace DataLayer
 			public const int ic_launcher = 2130837528;
 			
 			// aapt resource value: 0x7f020019
-			public const int Icon = 2130837529;
+			public const int ic_settings_white_24dp = 2130837529;
 			
 			// aapt resource value: 0x7f02001a
-			public const int notification_action_background = 2130837530;
+			public const int Icon = 2130837530;
 			
 			// aapt resource value: 0x7f02001b
-			public const int notification_bg = 2130837531;
+			public const int notification_action_background = 2130837531;
 			
 			// aapt resource value: 0x7f02001c
-			public const int notification_bg_low = 2130837532;
+			public const int notification_bg = 2130837532;
 			
 			// aapt resource value: 0x7f02001d
-			public const int notification_bg_low_normal = 2130837533;
+			public const int notification_bg_low = 2130837533;
 			
 			// aapt resource value: 0x7f02001e
-			public const int notification_bg_low_pressed = 2130837534;
+			public const int notification_bg_low_normal = 2130837534;
 			
 			// aapt resource value: 0x7f02001f
-			public const int notification_bg_normal = 2130837535;
+			public const int notification_bg_low_pressed = 2130837535;
 			
 			// aapt resource value: 0x7f020020
-			public const int notification_bg_normal_pressed = 2130837536;
+			public const int notification_bg_normal = 2130837536;
 			
 			// aapt resource value: 0x7f020021
-			public const int notification_icon_background = 2130837537;
-			
-			// aapt resource value: 0x7f020024
-			public const int notification_template_icon_bg = 2130837540;
-			
-			// aapt resource value: 0x7f020025
-			public const int notification_template_icon_low_bg = 2130837541;
+			public const int notification_bg_normal_pressed = 2130837537;
 			
 			// aapt resource value: 0x7f020022
-			public const int notification_tile_bg = 2130837538;
+			public const int notification_icon_background = 2130837538;
+			
+			// aapt resource value: 0x7f020025
+			public const int notification_template_icon_bg = 2130837541;
+			
+			// aapt resource value: 0x7f020026
+			public const int notification_template_icon_low_bg = 2130837542;
 			
 			// aapt resource value: 0x7f020023
-			public const int notify_panel_notification_icon_bg = 2130837539;
+			public const int notification_tile_bg = 2130837539;
+			
+			// aapt resource value: 0x7f020024
+			public const int notify_panel_notification_icon_bg = 2130837540;
 			
 			static Drawable()
 			{
@@ -417,6 +420,24 @@ namespace DataLayer
 		
 		public partial class Id
 		{
+			
+			// aapt resource value: 0x7f0a0031
+			public const int PurgeAllButton = 2131361841;
+			
+			// aapt resource value: 0x7f0a0032
+			public const int PurgeHeartBeatButton = 2131361842;
+			
+			// aapt resource value: 0x7f0a0033
+			public const int PurgeHeartRateButton = 2131361843;
+			
+			// aapt resource value: 0x7f0a0034
+			public const int PurgeStepsButton = 2131361844;
+			
+			// aapt resource value: 0x7f0a0035
+			public const int SettingsBackButton = 2131361845;
+			
+			// aapt resource value: 0x7f0a0030
+			public const int SettingsTitleText = 2131361840;
 			
 			// aapt resource value: 0x7f0a001f
 			public const int action0 = 2131361823;
@@ -644,6 +665,9 @@ namespace DataLayer
 			
 			// aapt resource value: 0x7f03000f
 			public const int notification_template_part_time = 2130903055;
+			
+			// aapt resource value: 0x7f030010
+			public const int settings_activity = 2130903056;
 			
 			static Layout()
 			{

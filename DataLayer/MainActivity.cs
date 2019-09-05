@@ -107,16 +107,6 @@ namespace DataLayer
 
         }
 
-        
-
-        
-
-
-        
-
-
-        
-
         private void updateConnectionStatusString(string text)
         {
             RunOnUiThread(() =>
@@ -193,8 +183,6 @@ namespace DataLayer
             
         }
 
-        
-
         protected override async void OnPause()
         {
             base.OnPause();
@@ -222,8 +210,6 @@ namespace DataLayer
                 updateConnectionStatusString("Disconnecting");
             //}
         }
-
-        
 
         public async void OnConnected(Bundle connectionHint)
         {
@@ -434,8 +420,16 @@ namespace DataLayer
             HeartDebugHandler.debugLog("Start wearable activity clicked");
         }
 
+        [Export("onSettingsButtonClicked")]
+        public void onSettingsButtonClicked(View view)
+        {
+            HeartDebugHandler.debugLog("Settings clicked!");
+            Intent intent = new Intent(this, typeof(SettingsActivity));
+            StartActivity(intent);
+            HeartDebugHandler.debugLog("BreakPoint");
+        }
 
-        
+
         ///<summary>
         ///toggles the chart visible or not, and also renders the chart a new every time it's toggled on
         /// </summary>
@@ -452,7 +446,7 @@ namespace DataLayer
                 List<HeartDataPoint> dataPoints = await HeartFileHandler.getData(HeartFileHandler.FILENAME_STEPS);
                 
                 List<Entry> orderedSummarizedList = new List<Entry>();
-                if(dataPoints.Count > 0) {
+                if(dataPoints != null && dataPoints.Count > 0) {
 
                         dataPoints.Sort((x,y) => x.timestamp.CompareTo(y.timestamp)); //ordering list by time
 
@@ -497,6 +491,12 @@ namespace DataLayer
                     chartView.Chart = chart;
 
 
+                }
+                else
+                {
+                    chartView.Visibility = ViewStates.Gone;
+                    imageView.Visibility = ViewStates.Visible;
+                    Toast.MakeText(this, "No data currently available", ToastLength.Short).Show();
                 }
             }
             else
