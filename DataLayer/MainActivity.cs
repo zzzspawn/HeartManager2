@@ -454,11 +454,13 @@ namespace DataLayer
                         //DateTime currentDate = currentPoint.timestamp;
                         //int currentHour = currentPoint.timestamp.Hour;
                         int currentTotal = 0;
+                        int colorCount = 0;
                     for (int i = 0; i < dataPoints.Count; i++)
                     {
                         HeartDataPoint examinePoint = dataPoints[i];
                         if (currentPoint.timestamp.Date == examinePoint.timestamp.Date &&
-                            currentPoint.timestamp.Hour == examinePoint.timestamp.Hour)
+                            currentPoint.timestamp.Hour == examinePoint.timestamp.Hour &&
+                            currentPoint.timestamp.Minute == examinePoint.timestamp.Minute)
                         {
                             currentTotal += examinePoint.amount;
                         }
@@ -469,8 +471,9 @@ namespace DataLayer
                             {
                                 Label = currentPoint.timestamp.Date.ToString("d") + ", Hour: " + currentPoint.timestamp.Hour,
                                 ValueLabel = currentTotal.ToString(),
-                                Color = SKColor.Parse("#266489")
+                                Color = SKColor.Parse(getColor(colorCount))
                             };
+                            colorCount++;
                             orderedSummarizedList.Add(entry);
 
                             currentPoint = dataPoints[i];
@@ -480,9 +483,9 @@ namespace DataLayer
                     //Adding the last iteration of the list(also helps when list only contains one member)
                     Entry lastEntry = new Entry(currentTotal)
                     {
-                        Label = currentPoint.timestamp.Date.ToString("d") + ", Hour: " + currentPoint.timestamp.Hour,
+                        Label = currentPoint.timestamp.Date.ToString("d") + ", Hour: " + currentPoint.timestamp.Hour + "Min: " + currentPoint.timestamp.Minute,
                         ValueLabel = currentTotal.ToString(),
-                        Color = SKColor.Parse("#266489")
+                        Color = SKColor.Parse(getColor(colorCount))
                     };
                     orderedSummarizedList.Add(lastEntry);
 
@@ -505,6 +508,29 @@ namespace DataLayer
                 imageView.Visibility = ViewStates.Visible;
             }
         }
+
+        private string getColor(int selectedIndex)
+        {
+
+            string[] colors = new[] { "#91aaff", "#ff9e9e", "#ff80c5", "#7afbff", "#8aff9c" };
+
+            if (selectedIndex >= colors.Length)
+            {
+                int newIndex = selectedIndex;
+                while (newIndex >= colors.Length)
+                {
+                    newIndex -= colors.Length;
+                }
+
+                return colors[selectedIndex];
+            }
+            else
+            {
+                return colors[selectedIndex];
+            }
+
+        }
+
 
         /// <summary>
         /// Sends an RPC to start a fullscreen Activity on the wearable

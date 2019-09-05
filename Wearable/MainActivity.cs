@@ -159,7 +159,8 @@ namespace Wearable
 
             if (sensorManager.GetSensorList(SensorType.StepCounter).Count > 0)
             {
-                stepCounter = sensorManager.GetDefaultSensor(SensorType.StepCounter);
+                //stepCounter = sensorManager.GetDefaultSensor(SensorType.StepCounter);
+                stepCounter = sensorManager.GetDefaultSensor(SensorType.StepDetector);
             }
             else
             {
