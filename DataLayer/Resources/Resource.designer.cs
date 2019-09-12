@@ -421,6 +421,12 @@ namespace DataLayer
 		public partial class Id
 		{
 			
+			// aapt resource value: 0x7f0a0036
+			public const int CodeTextView = 2131361846;
+			
+			// aapt resource value: 0x7f0a0037
+			public const int CodeTextViewCode = 2131361847;
+			
 			// aapt resource value: 0x7f0a0031
 			public const int PurgeAllButton = 2131361841;
 			
@@ -433,8 +439,8 @@ namespace DataLayer
 			// aapt resource value: 0x7f0a0034
 			public const int PurgeStepsButton = 2131361844;
 			
-			// aapt resource value: 0x7f0a0035
-			public const int SettingsBackButton = 2131361845;
+			// aapt resource value: 0x7f0a0038
+			public const int SettingsBackButton = 2131361848;
 			
 			// aapt resource value: 0x7f0a0030
 			public const int SettingsTitleText = 2131361840;
@@ -537,6 +543,9 @@ namespace DataLayer
 			
 			// aapt resource value: 0x7f0a0024
 			public const int notification_main_column_container = 2131361828;
+			
+			// aapt resource value: 0x7f0a0035
+			public const int postRequestTestButton = 2131361845;
 			
 			// aapt resource value: 0x7f0a002b
 			public const int right_icon = 2131361835;

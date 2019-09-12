@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using Android.App;
@@ -115,28 +116,28 @@ namespace DataLayer
                         if (line.Contains("DateTime"))
                         {
                             param1Found = true;
-                            HeartDebugHandler.debugLog("line: " + line);
+                            //HeartDebugHandler.debugLog("line: " + line);
                             string dateString = line.Split(new[] { ':' }, 2)[1];
                             int first = dateString.IndexOf("\"") + 1;
                             int last = dateString.LastIndexOf("\"");
                             int length = last - first;
-                            HeartDebugHandler.debugLog("Breakpoint");
+                            //HeartDebugHandler.debugLog("Breakpoint");
                             dateString = dateString.Substring(first, length);
-                            HeartDebugHandler.debugLog("Breakpoint");
+                            //HeartDebugHandler.debugLog("Breakpoint");
                             date = DateTime.Parse(dateString, null, DateTimeStyles.RoundtripKind);
-                            HeartDebugHandler.debugLog("Breakpoint");
+                            //HeartDebugHandler.debugLog("Breakpoint");
                         }
 
                         if (param1Found && line.Contains("Value"))
                         {
                             param2Found = true;
-                            HeartDebugHandler.debugLog("line: " + line);
+                            //HeartDebugHandler.debugLog("line: " + line);
                             string valueString = line.Split(":")[1];
-                            HeartDebugHandler.debugLog("Breakpoint");
+                            //HeartDebugHandler.debugLog("Breakpoint");
                             valueString = valueString.Replace("\"", "");
                             valueString = valueString.Replace(" ", "");
                             valueString = valueString.Replace(",", "");
-                            HeartDebugHandler.debugLog("Breakpoint");
+                            //HeartDebugHandler.debugLog("Breakpoint");
                             value = int.Parse(valueString);
                         }
 
@@ -145,7 +146,7 @@ namespace DataLayer
                             if (dataType != HeartDataType.None && value != -1 && date.HasValue)
                             {
                                 HeartDataPoint dataPoint = new HeartDataPoint(dataType, value, (DateTime)date);
-                                HeartDebugHandler.debugLog("Breakpoinmarker");
+                                //HeartDebugHandler.debugLog("Breakpoinmarker");
                                 dataPoints.Add(dataPoint);
 
                                 //dataType = HeartDataType.None;
@@ -166,6 +167,33 @@ namespace DataLayer
             }
 
             return dataPoints; //return actual value
+        }
+
+        internal static async Task<string> getJSONString()
+        {
+
+            //string example = "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]";
+            List<HeartDataPoint> list = await getData(FILENAME_STEPS);
+            StringBuilder stringBuilder = new StringBuilder("[");
+
+            for(int i = 0; i < list.Count; i++)
+            {
+                HeartDataPoint x = list[i];
+                stringBuilder.Append("{\"dateTime\": ");
+                stringBuilder.Append("\"");
+                stringBuilder.Append(x.timestamp.ToString("O"));
+                stringBuilder.Append("\"");
+                stringBuilder.Append(",\"value\": ");
+                stringBuilder.Append(x.amount.ToString());
+                stringBuilder.Append("}");
+                if (i < list.Count - 1)
+                {
+                    stringBuilder.Append(",");
+                }
+            };
+
+            stringBuilder.Append("]");
+            return stringBuilder.ToString();
         }
 
         private static async Task storeDataPointsTask(List<HeartDataPoint> dataPoints, string fileName)

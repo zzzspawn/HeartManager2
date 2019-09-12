@@ -437,8 +437,6 @@ namespace DataLayer
         [Export("onToggleChartClicked")]
         public async void onToggleChartClicked(View view)
         {
-
-            
             if (imageView.Visibility == ViewStates.Visible)
             {
                 imageView.Visibility = ViewStates.Gone;
@@ -492,8 +490,6 @@ namespace DataLayer
                     var entriesLC = orderedSummarizedList.ToArray();
                     var chart = new LineChart(){Entries = entriesLC};
                     chartView.Chart = chart;
-
-
                 }
                 else
                 {
@@ -522,7 +518,7 @@ namespace DataLayer
                     newIndex -= colors.Length;
                 }
 
-                return colors[selectedIndex];
+                return colors[newIndex];
             }
             else
             {
