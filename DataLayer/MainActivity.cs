@@ -56,6 +56,7 @@ namespace DataLayer
         private Queue<HeartDataPoint> hdata_Steps;
 
         private StatusHandler dataStatusHandler;
+        private StatusHandler connectionStatusHandler;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -69,6 +70,7 @@ namespace DataLayer
             SetupLists();
 
             dataStatusHandler = new StatusHandler(statusTextView, "No data received");
+            connectionStatusHandler = new StatusHandler(connectionStatusTextView, "");
 
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .AddApi(WearableClass.API)
@@ -98,7 +100,8 @@ namespace DataLayer
         {
             RunOnUiThread(() =>
             {
-                connectionStatusTextView.Text = text;
+                //connectionStatusTextView.Text = text;
+                connectionStatusHandler.updateStatus(text);
             });
         }
         private void updateStatusString(string text)
@@ -148,27 +151,27 @@ namespace DataLayer
 
             if (!mGoogleApiClient.IsConnected)
             {
+                updateConnectionStatusString("Connecting");
                 mGoogleApiClient.Connect();
             }
-            updateConnectionStatusString("Connecting");
-                
-            
         }
 
-        protected override void OnResume()
+        protected override async void OnResume()
         {
             base.OnResume();
             HeartDebugHandler.debugLog("OnResume ran");
-            //if (!mResolvingError) { }
+
+            updateConnectionStatusString("Connecting");
+            await WearableClass.DataApi.AddListener(mGoogleApiClient, this);
+            await WearableClass.MessageApi.AddListener(mGoogleApiClient, this);
+            await WearableClass.NodeApi.AddListener(mGoogleApiClient, this);
 
             if (!mGoogleApiClient.IsConnected)
             {
+                
                 mGoogleApiClient.Connect();
             }
 
-            updateConnectionStatusString("Connecting");
-
-            
         }
 
         protected override async void OnPause()
@@ -176,12 +179,13 @@ namespace DataLayer
             base.OnPause();
             HeartDebugHandler.debugLog("App Paused");
             //if (!mResolvingError) { }
-            
+
+            updateConnectionStatusString("Disconnecting");
             await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
             mGoogleApiClient.Disconnect();
-            updateConnectionStatusString("Disconnecting");
+            
         
         }
 

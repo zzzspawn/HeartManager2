@@ -764,9 +764,6 @@ namespace DataLayer
 			// aapt resource value: 0x7f070012
 			public const int library_name = 2131165202;
 			
-			// aapt resource value: 0x7f070017
-			public const int send_photo = 2131165207;
-			
 			// aapt resource value: 0x7f070015
 			public const int start = 2131165205;
 			
@@ -775,9 +772,6 @@ namespace DataLayer
 			
 			// aapt resource value: 0x7f070011
 			public const int status_bar_notification_info_overflow = 2131165201;
-			
-			// aapt resource value: 0x7f070016
-			public const int take_photo = 2131165206;
 			
 			static String()
 			{
