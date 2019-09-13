@@ -25,6 +25,7 @@
       android:textSize="56px"
       android:textAlignment="center"
       android:layout_below="@id/connectionStatusText"
+      android:gravity="center_horizontal"
     />
 
     <Button

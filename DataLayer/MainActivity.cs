@@ -39,27 +39,12 @@ namespace DataLayer
     public class MainActivity : Activity, IDataApiDataListener, IMessageApiMessageListener, INodeApiNodeListener,
         GoogleApiClient.IConnectionCallbacks, GoogleApiClient.IOnConnectionFailedListener
     {
-        const string Tag = "MainActivity";
-
-        /// <summary>
-        /// Request code for launching the Intent to resolve Google Play services errors
-        /// </summary>
-        const int RequestResolveError = 1000;
-
-        const string StartActivityPath = "/start-activity";
-        const string FunMessagePath = "/fun-message";
-        const string DataPointPath = "/data-point";
         const string DataPointsPath = "/data-points";
-        const string TestDataPath = "/data-test";
-        
         private const int maxConnectionAttempts = 10;
         private int connectionAttempts;
         GoogleApiClient mGoogleApiClient;
-        //bool mResolvingError = false;
-
         View startActivityBtn;
 
-        //View SendFunMessageBtn;
         private TextView statusTextView;
         private TextView connectionStatusTextView;
         private ImageView imageView;
@@ -70,17 +55,20 @@ namespace DataLayer
         private Queue<HeartDataPoint> hdata_Beat;
         private Queue<HeartDataPoint> hdata_Steps;
 
+        private StatusHandler dataStatusHandler;
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
             handler = new Handler();
-            LOGD(Tag, "OnCreate");
+            HeartDebugHandler.debugLog("OnCreate");
             connectionAttempts = 0;
             SetContentView(Resource.Layout.main_activity);
             HeartDebugHandler.debugLog("App Launched");
             SetupViews();
             SetupLists();
+
+            dataStatusHandler = new StatusHandler(statusTextView, "No data received");
 
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .AddApi(WearableClass.API)
@@ -89,23 +77,22 @@ namespace DataLayer
                 .Build();
         }
 
-        public void SendData(string data, string path)
-        {
-            try
-            {
-                var request = PutDataMapRequest.Create(path);
-                var map = request.DataMap;
-                map.PutString("Message", data);
-                map.PutLong("UpdatedAt", DateTime.UtcNow.Ticks);
-                WearableClass.DataApi.PutDataItem(mGoogleApiClient, request.AsPutDataRequest());
-            }
-            finally
-            {
-                //_client.Disconnect();
-            }
+        //public void SendData(string data, string path)
+        //{
+        //    try
+        //    {
+        //        var request = PutDataMapRequest.Create(path);
+        //        var map = request.DataMap;
+        //        map.PutString("Message", data);
+        //        map.PutLong("UpdatedAt", DateTime.UtcNow.Ticks);
+        //        WearableClass.DataApi.PutDataItem(mGoogleApiClient, request.AsPutDataRequest());
+        //    }
+        //    finally
+        //    {
+        //        //_client.Disconnect();
+        //    }
             
-
-        }
+        //}
 
         private void updateConnectionStatusString(string text)
         {
@@ -118,7 +105,8 @@ namespace DataLayer
         {
             RunOnUiThread(() =>
             {
-                statusTextView.Text = text;
+                //statusTextView.Text = text;
+                dataStatusHandler.updateStatus(text);
             });
         }
 
@@ -213,7 +201,7 @@ namespace DataLayer
 
         public async void OnConnected(Bundle connectionHint)
         {
-            LOGD(Tag, "Google API CLient was connected");
+            HeartDebugHandler.debugLog("Google API CLient was connected");
             //mResolvingError = false;
             connectionAttempts = 0;
             startActivityBtn.Enabled = true;
@@ -225,7 +213,7 @@ namespace DataLayer
 
         public void OnConnectionSuspended(int cause)
         {
-            LOGD(Tag, "Connection to Google API client was suspended");
+            HeartDebugHandler.debugLog("Connection to Google API client was suspended");
             startActivityBtn.Enabled = false;
             updateConnectionStatusString("Connection Suspended");
         }
@@ -290,12 +278,12 @@ namespace DataLayer
 
                 if (teller > 0)
                 {
-                    updateStatusString("Data received(Amount: " + teller + ").");
+                    updateStatusString("Data received, Amount: " + teller + ".");
                     //saveStepData();//bør nok kjøres på en mer intelligent måte
                 }
                 else
                 {
-                    updateStatusString("No valid data received.");
+                    updateStatusString("Invalid data received.");
                 }
 
             }
@@ -357,7 +345,7 @@ namespace DataLayer
 
         public void OnPeerConnected (INode peer)
 		{
-			LOGD (Tag, "OnPeerConencted: " + peer);
+            HeartDebugHandler.debugLog("OnPeerConencted: " + peer);
 			handler.Post (() => {
                 updateConnectionStatusString("Peer Connected");
             });
@@ -365,60 +353,11 @@ namespace DataLayer
 
 		public void OnPeerDisconnected (INode peer)
 		{
-			LOGD (Tag, "OnPeerDisconnected: " + peer);
+			HeartDebugHandler.debugLog("OnPeerDisconnected: " + peer);
 			handler.Post (() => {
                 updateConnectionStatusString("Peer Disconnected");
             });
 		}
-
-		ICollection<string> Nodes {
-			get {
-				HashSet<string> results = new HashSet<string> ();
-				var  nodes = WearableClass.NodeApi.GetConnectedNodesAsync (mGoogleApiClient).Result;
-
-				foreach (var node in nodes.Nodes) {
-					results.Add (node.Id);
-				}
-				return results;
-			}
-		}
-
-        async Task SendStartActivityMessage(String node) {
-            HeartDebugHandler.debugLog("Attempting to start activity");
-            var res = await WearableClass.MessageApi.SendMessageAsync (mGoogleApiClient, node, StartActivityPath, new byte[0]);
-    		if (!res.Status.IsSuccess) {
-				Log.Error(Tag, "Failed to send message with status code: " + res.Status.StatusCode);
-                updateStatusString("Failed to send signal");
-            }
-            else
-            {
-                updateStatusString("Start signal sent");
-            }
-		}
-
-		class StartWearableActivityTask : AsyncTask
-		{
-			public MainActivity Activity;
-			protected override Java.Lang.Object DoInBackground (params Java.Lang.Object[] @params)
-			{
-				if (Activity != null) {
-					var nodes = Activity.Nodes;
-					foreach (var node in nodes) {
-						Activity.SendStartActivityMessage (node);
-					}
-				}
-				return null;
-			}
-		}
-
-        /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
-        /// </summary>
-        /// <param name="view"></param>
-        [Export("onStartWearableActivityClick")]
-		public void OnStartWearableActivityClick(View view) {
-            HeartDebugHandler.debugLog("Start wearable activity clicked");
-        }
 
         [Export("onSettingsButtonClicked")]
         public void onSettingsButtonClicked(View view)
@@ -429,11 +368,6 @@ namespace DataLayer
             HeartDebugHandler.debugLog("BreakPoint");
         }
 
-
-        ///<summary>
-        ///toggles the chart visible or not, and also renders the chart a new every time it's toggled on
-        /// </summary>
-        /// <param name="view"></param>
         [Export("onToggleChartClicked")]
         public async void onToggleChartClicked(View view)
         {
@@ -528,52 +462,15 @@ namespace DataLayer
         }
 
 
-        /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
-        /// </summary>
-        /// <param name="view"></param>
         [Export("onSaveToFileClicked")]
         public void onSaveToFileClicked(View view)
         {
             HeartDebugHandler.debugLog("Save to file clicked");
-            HeartFileHandler.saveData(hdata_Steps, HeartFileHandler.FILENAME_STEPS);
+            
+            HeartFileHandler.saveData(hdata_Steps, HeartFileHandler.FILENAME_STEPS, dataStatusHandler);
         }
 
-        /// <summary>
-        /// A simple wrapper around Log.Debug
-        /// </summary>
-        /// <param name="tag">Tag</param>
-        /// <param name="message">Message to log</param>
-        static void LOGD(string tag, string message) 
-		{
-			if (Log.IsLoggable(tag, LogPriority.Debug)) {
-				Log.Debug(tag, message);
-			}
-        }
-
-        //private enum HeartDataType
-        //{
-        //    None,
-        //    HeartBeat,
-        //    HeartRate,
-        //    StepCount//test type for quick data
-        //}
-
-        //private class HeartDataPoint
-        //{
-        //    public HeartDataType heartType { get; }
-        //    public int amount { get; set; }
-        //    public DateTime timestamp { get; }
-        //    public HeartDataPoint(HeartDataType heartType, int amount, DateTime timestamp)
-        //    {
-        //        this.heartType = heartType;
-        //        this.amount = amount;
-        //        this.timestamp = timestamp;
-        //    }
-
-        //}
-
-	}
+    }
 }
 
 

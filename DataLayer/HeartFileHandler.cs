@@ -27,7 +27,7 @@ namespace DataLayer
             return ReadDataPointsTask(filename);
         }
 
-        public static async void saveData(Queue<HeartDataPoint> hdata, string filename)
+        public static async void saveData(Queue<HeartDataPoint> hdata, string filename, StatusHandler dataStatusHandler)
         {
 
             HeartDebugHandler.debugLog("Save step start");
@@ -55,7 +55,9 @@ namespace DataLayer
             }
             HeartDebugHandler.debugLog("Datasets have been merged, final tally: " + existingData.Count.ToString());
             HeartDebugHandler.debugLog("Actually writing the file");
-            await storeDataPointsTask(existingData, filename);
+            await storeDataPointsTask(existingData, filename, dataStatusHandler);
+            
+
         }
 
         
@@ -196,7 +198,7 @@ namespace DataLayer
             return stringBuilder.ToString();
         }
 
-        private static async Task storeDataPointsTask(List<HeartDataPoint> dataPoints, string fileName)
+        private static async Task storeDataPointsTask(List<HeartDataPoint> dataPoints, string fileName, StatusHandler dataStatusHandler)
         {
             if (dataPoints != null && dataPoints.Count > 0)
             {
@@ -248,7 +250,7 @@ namespace DataLayer
                     await writer.WriteLineAsync("}"); debugString += "}";
 
                 }
-
+                dataStatusHandler.updateStatus("File saved");
                 if (debugString != "")
                 {
                     HeartDebugHandler.debugLog("File that was saved: ");
@@ -263,6 +265,7 @@ namespace DataLayer
             else
             {
                 HeartDebugHandler.debugLog("No data to write, operation cancelled");
+                dataStatusHandler.updateStatus("No data to store");
             }
         }
 
