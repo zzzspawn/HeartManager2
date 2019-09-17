@@ -7,6 +7,37 @@
     android:theme="@android:style/Theme.Holo.NoActionBar"
 >
 
+  <RelativeLayout
+      android:id="@+id/CustomActionBar"
+      android:layout_width="match_parent"
+      android:layout_height="60dp"
+      android:layout_alignParentTop="true"
+  >
+        <TextView
+          android:id="@+id/AppTitle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Heart Monitor"
+          android:textSize="50dp"
+        />
+
+        <ImageButton
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:onClick="onSettingsButtonClicked"
+          android:layout_alignParentRight="true"
+          android:layout_centerVertical="true"
+          android:layout_marginRight="5dp"
+          android:src="@drawable/ic_settings_white_24dp"
+        />
+
+  </RelativeLayout>
+  <View 
+        android:id="@+id/mainActionBarDivider"
+        style="@style/Divider"
+        android:layout_below="@id/CustomActionBar"      
+  />
+
     <TextView
       android:id="@+id/connectionStatusText"
       android:layout_width="match_parent"
@@ -14,7 +45,7 @@
       android:text="StatusText"
       android:textSize="56px"
       android:textAlignment="center"
-      android:layout_alignParentTop="true"
+      android:layout_below="@id/mainActionBarDivider"
       android:gravity="center_horizontal"
     />
     <TextView
@@ -28,7 +59,9 @@
       android:gravity="center_horizontal"
     />
 
-    <View style="@style/Divider"
+    <View 
+        android:id="@+id/statusTextDivider"
+        style="@style/Divider"
       android:layout_below="@id/statusText"      
     />
 
@@ -50,10 +83,19 @@
         android:id="@+id/savetofilebtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save data to file"
+        android:text="Save to file"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:onClick="onSaveToFileClicked"
+    />
+  <Button
+      android:id="@+id/SendAllDataButton"  
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_centerHorizontal="true"
+      android:layout_alignParentBottom="true"
+      android:text="Upload"
+      android:onClick="onUploadAllClicked"
     />
     <Button
         android:id="@+id/toggleChartBtn"
@@ -64,15 +106,16 @@
         android:layout_alignParentRight="true"
         android:onClick="onToggleChartClicked"
     />
-    <ImageButton
+
+
+    <TextView
+        android:id="@+id/mainCodeTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="onSettingsButtonClicked"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@id/savetofilebtn"
-        android:layout_toLeftOf="@id/toggleChartBtn"
-        android:src="@drawable/ic_settings_white_24dp"
-        android:padding="5dp"
+        android:text="Code"
+        android:textSize="35dp"
+        android:layout_below="@id/statusTextDivider"
+        android:visibility="invisible"
     />
 
     <ImageView
@@ -80,7 +123,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:src="@drawable/heartlogo"
-        android:layout_below="@id/statusText"
+        android:layout_below="@id/mainCodeTV"
         android:layout_above="@id/savetofilebtn"
     />
 

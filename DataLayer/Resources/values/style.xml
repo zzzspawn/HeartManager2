@@ -6,7 +6,7 @@
         <item name="android:background">?android:attr/listDivider</item>
     </style>
 
-  <style name="HoloCustom" parent="@android:style/Theme.Holo.NoActionBar">
+  <!--<style name="HoloCustom" parent="@android:style/Theme.Holo.NoActionBar">
     <item name="android:paddingBottom">0</item>
-  </style>
+  </style>-->
 </resources>

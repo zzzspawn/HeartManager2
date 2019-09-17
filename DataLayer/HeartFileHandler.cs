@@ -22,6 +22,8 @@ namespace DataLayer
         public const string FILENAME_HEARTRATE = "hratedata.json";
         public const string FILENAME_HEARTBEAT = "hbeatdata.json";
 
+        private static string[] beingSaved = new string[3];
+
         public static Task<List<HeartDataPoint>> getData(string filename)
         {
             return ReadDataPointsTask(filename);
@@ -30,33 +32,78 @@ namespace DataLayer
         public static async void saveData(Queue<HeartDataPoint> hdata, string filename, StatusHandler dataStatusHandler)
         {
 
-            HeartDebugHandler.debugLog("Save step start");
-            List<HeartDataPoint> existingData;
-            HeartDebugHandler.debugLog("Reading existing data start");
-            existingData = await ReadDataPointsTask(filename);
-            HeartDebugHandler.debugLog("Reading existing data finished");
-            HeartDebugHandler.debugLog("Merging the two datasets");
-            if (existingData == null)
+            bool cancelOp = false;
+            int selected = -1;
+
+            switch (filename)
             {
-                existingData = new List<HeartDataPoint>();
+                case FILENAME_STEPS: selected = 0;
+                    break;
+                case FILENAME_HEARTBEAT: selected = 1;
+                    break;
+                case FILENAME_HEARTRATE: selected = 2;
+                    break;
+            }
+
+            if (selected != -1 && beingSaved[selected] == null)
+            {
+                beingSaved[selected] = filename;
             }
             else
             {
-                if (existingData.Count > 0)
-                {
-                    HeartDebugHandler.debugLog("There was existing data, amount" + existingData.Count.ToString());
-                    HeartDebugHandler.debugLog("First datapoint contained: " + existingData[0].heartType.ToString("G") + ";" + existingData[0].amount.ToString() + ";" + existingData[0].timestamp + ".");
-                }
+                cancelOp = true;
             }
-            while (hdata.Any())
+
+
+            if (!cancelOp)
             {
-                HeartDataPoint element = hdata.Dequeue();
-                existingData.Add(element);
+                HeartDebugHandler.debugLog("Save start");
+                List<HeartDataPoint> existingData;
+                HeartDebugHandler.debugLog("Reading existing data start");
+                existingData = await ReadDataPointsTask(filename);
+                HeartDebugHandler.debugLog("Reading existing data finished");
+                HeartDebugHandler.debugLog("Merging the two datasets");
+                if (existingData == null)
+                {
+                    existingData = new List<HeartDataPoint>();
+                }
+                else
+                {
+                    if (existingData.Count > 0)
+                    {
+                        HeartDebugHandler.debugLog("There was existing data, amount" + existingData.Count.ToString());
+                        HeartDebugHandler.debugLog("First datapoint contained: " + existingData[0].heartType.ToString("G") + ";" + existingData[0].amount.ToString() + ";" + existingData[0].timestamp + ".");
+                    }
+                }
+                while (hdata.Any())
+                {
+                    HeartDataPoint element = hdata.Dequeue();
+                    existingData.Add(element);
+                }
+                HeartDebugHandler.debugLog("Datasets have been merged, final tally: " + existingData.Count.ToString());
+                HeartDebugHandler.debugLog("Actually writing the file");
+                await storeDataPointsTask(existingData, filename, dataStatusHandler);
+
+
+
+                if (filename.Equals(FILENAME_STEPS))
+                {
+                    beingSaved[0] = null;
+                }else if (filename.Equals(FILENAME_HEARTBEAT))
+                {
+                    beingSaved[1] = null;
+                }
+                else if (filename.Equals(FILENAME_HEARTRATE))
+                {
+                    beingSaved[2] = null;
+                }
+
+
             }
-            HeartDebugHandler.debugLog("Datasets have been merged, final tally: " + existingData.Count.ToString());
-            HeartDebugHandler.debugLog("Actually writing the file");
-            await storeDataPointsTask(existingData, filename, dataStatusHandler);
-            
+            else
+            {
+                dataStatusHandler.updateStatus("Data already being saved");
+            }
 
         }
 
@@ -197,6 +244,39 @@ namespace DataLayer
             stringBuilder.Append("]");
             return stringBuilder.ToString();
         }
+
+
+        internal static async Task<string> getJSONString(string filename)
+        {
+
+            //string example = "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]";
+            List<HeartDataPoint> list = await getData(filename);
+            StringBuilder stringBuilder = new StringBuilder("[");
+
+            if (list != null)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    HeartDataPoint x = list[i];
+                    stringBuilder.Append("{\"dateTime\": ");
+                    stringBuilder.Append("\"");
+                    stringBuilder.Append(x.timestamp.ToString("O"));
+                    stringBuilder.Append("\"");
+                    stringBuilder.Append(",\"value\": ");
+                    stringBuilder.Append(x.amount.ToString());
+                    stringBuilder.Append("}");
+                    if (i < list.Count - 1)
+                    {
+                        stringBuilder.Append(",");
+                    }
+                }
+            }
+            stringBuilder.Append("]");
+            return stringBuilder.ToString();
+        }
+
+
+
 
         private static async Task storeDataPointsTask(List<HeartDataPoint> dataPoints, string fileName, StatusHandler dataStatusHandler)
         {

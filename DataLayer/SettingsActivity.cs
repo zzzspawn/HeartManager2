@@ -98,7 +98,7 @@ namespace DataLayer
 
             HeartDebugHandler.debugLog("Sending data");
 
-            HeartNetworkHandler.sendPostRequest(this, jsonString, codeView);
+            //HeartNetworkHandler.sendPostRequest(this, jsonString, codeView);
 
             // -- var response = await HeartNetworkHandler.sendPostRequest();
             // -- HeartDebugHandler.debugLog("Java.Net.SocketTimeoutException thrown");

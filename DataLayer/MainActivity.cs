@@ -275,9 +275,34 @@ namespace DataLayer
                     {
                         teller++;
                     }
-                    if (p.heartType == HeartDataType.HeartBeat) { hdata_Beat.Enqueue(p); }
-                    else if (p.heartType == HeartDataType.HeartRate) { hdata_Rate.Enqueue(p); }
-                    else if (p.heartType == HeartDataType.StepCount) { hdata_Steps.Enqueue(p); }
+
+                    if (p.heartType == HeartDataType.HeartBeat)
+                    {
+                        hdata_Beat.Enqueue(p);
+
+                        if (hdata_Beat.Count > 50)
+                        {
+                            HeartFileHandler.saveData(hdata_Beat, HeartFileHandler.FILENAME_HEARTBEAT, dataStatusHandler);
+                        }
+
+                    }
+                    else if (p.heartType == HeartDataType.HeartRate)
+                    {
+                        hdata_Rate.Enqueue(p);
+
+                        if (hdata_Rate.Count > 50)
+                        {
+                            HeartFileHandler.saveData(hdata_Rate, HeartFileHandler.FILENAME_HEARTRATE, dataStatusHandler);
+                        }
+                    }
+                    else if (p.heartType == HeartDataType.StepCount)
+                    {
+                        hdata_Steps.Enqueue(p);
+                        if (hdata_Steps.Count > 50)
+                        {
+                            HeartFileHandler.saveData(hdata_Steps, HeartFileHandler.FILENAME_STEPS, dataStatusHandler);
+                        }
+                    }
                 }
 
                 if (teller > 0)
@@ -470,8 +495,51 @@ namespace DataLayer
         public void onSaveToFileClicked(View view)
         {
             HeartDebugHandler.debugLog("Save to file clicked");
-            
-            HeartFileHandler.saveData(hdata_Steps, HeartFileHandler.FILENAME_STEPS, dataStatusHandler);
+
+            if (hdata_Steps.Count > 0)
+            {
+                HeartFileHandler.saveData(hdata_Steps, HeartFileHandler.FILENAME_STEPS, dataStatusHandler);
+            }
+
+            if (hdata_Rate.Count > 0)
+            {
+                HeartFileHandler.saveData(hdata_Rate, HeartFileHandler.FILENAME_HEARTRATE, dataStatusHandler);
+            }
+
+            if (hdata_Beat.Count > 0)
+            {
+                HeartFileHandler.saveData(hdata_Beat, HeartFileHandler.FILENAME_HEARTBEAT, dataStatusHandler);
+            }
+
+            if (hdata_Steps.Count == 0 && hdata_Beat.Count == 0 && hdata_Rate.Count == 0)
+            {
+                dataStatusHandler.updateStatus("No unsaved data");
+            }
+
+        }
+        [Export("onUploadAllClicked")]
+        public async void onUploadAllClicked(View view)
+        {
+
+            TextView codeView = FindViewById<TextView>(Resource.Id.mainCodeTV);
+            codeView.Visibility = ViewStates.Invisible;
+
+            HeartDebugHandler.debugLog("Getting json string");
+            string jsonStringSteps = await HeartFileHandler.getJSONString(HeartFileHandler.FILENAME_STEPS);
+            string jsonStringRate = await HeartFileHandler.getJSONString(HeartFileHandler.FILENAME_HEARTRATE);
+            string jsonStringBeat = await HeartFileHandler.getJSONString(HeartFileHandler.FILENAME_HEARTBEAT);
+
+            //HeartDebugHandler.debugLog(jsonString.Substring(jsonString.Length-30));
+            //HeartDebugHandler.debugLog("String got, length: " + jsonString.Length);
+
+            HeartDebugHandler.debugLog("Sending data");
+
+            //HeartNetworkHandler.sendPostRequest(this, jsonString, codeView);
+            //HeartNetworkHandler.sendPostRequest(this, jsonStringSteps, jsonStringRate, jsonStringBeat, codeView);
+            HeartPostSender hps = new HeartPostSender(this, codeView, jsonStringSteps, jsonStringRate, jsonStringBeat);
+
+            hps.SendData();
+
         }
 
     }
