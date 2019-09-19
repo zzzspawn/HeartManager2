@@ -268,6 +268,9 @@ namespace DataLayer
                 }
 
                 int teller = 0;
+                bool stepReceived = false;
+                bool hbReceived = false;
+                bool hrReceived = false;
                 foreach (string pointData in allDataPoints)
                 {
                     HeartDataPoint p = decodeDataPoint(pointData);
@@ -278,6 +281,7 @@ namespace DataLayer
 
                     if (p.heartType == HeartDataType.HeartBeat)
                     {
+                        if (!hbReceived) {hbReceived = true;}
                         hdata_Beat.Enqueue(p);
 
                         if (hdata_Beat.Count > 50)
@@ -288,6 +292,7 @@ namespace DataLayer
                     }
                     else if (p.heartType == HeartDataType.HeartRate)
                     {
+                        if (!hrReceived) { hrReceived = true; }
                         hdata_Rate.Enqueue(p);
 
                         if (hdata_Rate.Count > 50)
@@ -297,6 +302,7 @@ namespace DataLayer
                     }
                     else if (p.heartType == HeartDataType.StepCount)
                     {
+                        if (!stepReceived) { stepReceived = true; }
                         hdata_Steps.Enqueue(p);
                         if (hdata_Steps.Count > 50)
                         {
@@ -307,7 +313,11 @@ namespace DataLayer
 
                 if (teller > 0)
                 {
-                    updateStatusString("Data received, Amount: " + teller + ".");
+                    string types = "";
+                    if (hrReceived) {types += "HR,"; }
+                    if (hbReceived) { types += "HB,"; }
+                    if (stepReceived) { types += "St"; }
+                    updateStatusString("Data received, Types: {"+ types + "}, Amount: " + teller + ".");
                     //saveStepData();//bør nok kjøres på en mer intelligent måte
                 }
                 else
