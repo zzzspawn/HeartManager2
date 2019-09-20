@@ -28,7 +28,7 @@ namespace DataLayer
             this.amount = amount;
             this.timestamp = timestamp;
         }
-        //TODO should probably move the different "stringifying" methods into this class, so that it is better encapsulated in the correct area.
+        //TODO: should probably move the different "stringifying" methods into this class, so that it is better encapsulated in the correct area.
     }
 
     /// <summary>

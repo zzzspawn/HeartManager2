@@ -105,7 +105,7 @@ namespace DataLayer
 
 
                 //now reset the file being saved to null, so that the program knows it can be used again
-                //todo: look into whether this can all be handled using a callback instead, and whether that's more efficient
+                //TODO: look into whether this can all be handled using a callback instead, and whether that's more efficient
                 if (filename.Equals(FILENAME_STEPS))
                 {
                     beingSaved[0] = null;
@@ -253,7 +253,7 @@ namespace DataLayer
         {
             //string example = "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]";
             List<HeartDataPoint> list = await getData(filename);
-            //todo move into class definition instead, so that it is handled in a more appropriate location, should probs be called something like toJSONString() or simply toJSON()
+            //TODO: move into class definition instead, so that it is handled in a more appropriate location, should probs be called something like toJSONString() or simply toJSON()
             StringBuilder stringBuilder = new StringBuilder("[");
             if (list != null)
             {

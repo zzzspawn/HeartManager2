@@ -21,7 +21,9 @@ using System.Net.Http;
 
 namespace DataLayer
 {
-
+    /// <summary>
+    /// this class takes care of sending data to the web server
+    /// </summary>
     class HeartPostSender
     {
         private bool stepsReceived;
@@ -40,6 +42,14 @@ namespace DataLayer
         private string heartRateDataString;
         private string heartBeatDataString;
 
+        /// <summary>
+        /// Constructor for the data sending manager
+        /// </summary>
+        /// <param name="context">The application cotext, needed for toasts</param>
+        /// <param name="codeView">The TextView you want the feedback to appear in</param>
+        /// <param name="stepsDataString">Stepsdata json string</param>
+        /// <param name="heartRateDataString">Heart Rate json string</param>
+        /// <param name="heartBeatDataString">Heart beat json string</param>
         public HeartPostSender(Context context, TextView codeView, string stepsDataString, string heartRateDataString, string heartBeatDataString)
         {
             this.stepsReceived = false;
@@ -55,6 +65,9 @@ namespace DataLayer
             this.codeView = codeView;
         }
 
+        /// <summary>
+        /// test method for sending just the stepdata, good for easy testing
+        /// </summary>
         public void SendData()
         {
             using (var stepsClient = new WebClient())
@@ -71,7 +84,13 @@ namespace DataLayer
             }
         }
 
-
+        /// <summary>
+        /// the callback that happens when any data has been sent, so going through event args to see what, and generating a response display to client based on the result of that data upload.
+        /// then it starts the upload for the next type, and when all uploads have completed(as in connection has been terminated) it finishes and updates the UI.
+        /// so sort of recursive
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void dataUploadedCallback(object sender, UploadValuesCompletedEventArgs e)
         {
             if (e != null)
@@ -200,7 +219,9 @@ namespace DataLayer
             }
 
         }
-
+        /// <summary>
+        /// grabs the different results created in the upload callbacks and then displays the final tally to the client/user
+        /// </summary>
         public void updateUIWithData()
         {
             string endString = "Codes: " + "\n";
@@ -234,327 +255,6 @@ namespace DataLayer
 
         }
     }
-
-    //class HeartNetworkHandler
-    //{
-    //    //https://heartanalyzer.azurewebsites.net/
-    //    public static void sendPostRequest(Context context, string dataString, TextView codeView)
-    //    {
-    //        using (var client = new WebClient())
-    //        {
-    //            var values = new NameValueCollection();
-    //            values.Add("hdatatype", "StepCount");
-    //            values.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00");
-    //            //values.Add("hdatapoints", "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]");
-    //            values.Add("hdatapoints", dataString);
-    //            client.Headers[HttpRequestHeader.Accept] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    //            string url = "https://heartanalyzer.azurewebsites.net/";
-
-    //            //byte[] result = client.UploadValues(url, values);
-
-    //            client.UploadValuesCompleted += (sender, e) =>
-    //            {
-    //                HeartDebugHandler.debugLog("Result received");
-    //                if (e != null)
-    //                {
-    //                    try
-    //                    {
-    //                        var crash = e.Result;
-    //                    }
-    //                    catch (System.Reflection.TargetInvocationException exception)
-    //                    {
-                            
-    //                        var crash = exception.InnerException;
-    //                        if (crash != null)
-    //                        {
-    //                            HeartDebugHandler.debugLog(crash.ToString());
-    //                        }
-    //                        //HeartDebugHandler.debugLog("halt");
-    //                    }
-
-    //                    HeartDebugHandler.debugLog("e was not null");
-    //                    if (e.Result != null)
-    //                    {
-    //                        HeartDebugHandler.debugLog("e.Result was not null");
-    //                        byte[] result = e.Result;
-    //                        string resultText = Encoding.UTF8.GetString(result);
-    //                        HeartDebugHandler.debugLog(resultText);
-
-    //                        //TOAST HERE
-    //                        if (resultText.Length == 5)
-    //                        {
-    //                            Toast.MakeText(context, "Code: " + resultText, ToastLength.Long).Show();
-    //                            codeView.Text = resultText;
-    //                            codeView.Visibility = ViewStates.Visible;
-    //                        }
-    //                        else
-    //                        {
-    //                            Toast.MakeText(context, "Upload failed, response: " + resultText, ToastLength.Long).Show();
-    //                            codeView.Text = "Upload Failed..";
-    //                            codeView.Visibility = ViewStates.Visible;
-    //                        }
-                            
-    //                    }
-    //                    else
-    //                    {
-    //                        HeartDebugHandler.debugLog("e.Result was null");
-    //                        HeartDebugHandler.debugLog("e.Error: " + e.Error);
-
-    //                    }
-    //                }
-    //                else
-    //                {
-    //                    HeartDebugHandler.debugLog("e was null");
-    //                }
-
-    //            };
-    //            HeartDebugHandler.debugLog("Sending data");
-    //            client.UploadValuesAsync(new Uri(url),"POST", values);
-                
-    //            //Toast.MakeText(context, Encoding.UTF8.GetString(result), ToastLength.Long);
-    //        }
-    //    }
-    //    //sendPostRequestAlternate
-        
-    //    //public static void sendPostRequest(Context context, string stepsDataString, string hearRateDataString, string heartBeatDataString, TextView codeView)
-    //    //{
-    //    //    bool stepsReceived = false;
-    //    //    string stepsResult = null;
-    //    //    bool hrReceived = false;
-    //    //    string hrResult = null;
-    //    //    bool hbReceived = false;
-    //    //    string hbResult = null;
-    //    //    //push stepsDataString
-    //    //    using (var stepsClient = new WebClient())
-    //    //    {
-    //    //        //values.Add("hdatapoints", "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]");
-
-    //    //        var stepsValues = new NameValueCollection();
-    //    //        stepsValues.Add("hdatatype", "StepCount");
-    //    //        stepsValues.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00");
-    //    //        stepsValues.Add("hdatapoints", stepsDataString);
-
-    //    //        var heartBeatValues = new NameValueCollection();
-    //    //        heartBeatValues.Add("hdatatype", "HeartRate");
-    //    //        heartBeatValues.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00");
-    //    //        heartBeatValues.Add("hdatapoints", stepsDataString);
-
-    //    //        var heartRateValues = new NameValueCollection();
-    //    //        heartRateValues.Add("hdatatype", "Heartbeat");
-    //    //        heartRateValues.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00");
-    //    //        heartRateValues.Add("hdatapoints", stepsDataString);
-
-    //    //        stepsClient.Headers[HttpRequestHeader.Accept] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    //    //        string url = "https://heartanalyzer.azurewebsites.net/";
-
-    //    //        /*
-    //    //         stepsClient.UploadValuesCompleted += (sender, e) =>
-    //    //        {
-    //    //            HeartDebugHandler.debugLog("Result received");
-    //    //            if (e != null)
-    //    //            {
-    //    //                try
-    //    //                {
-    //    //                    var crash = e.Result;
-    //    //                }
-    //    //                catch (System.Reflection.TargetInvocationException exception)
-    //    //                {
-
-    //    //                    var crash = exception.InnerException;
-    //    //                    if (crash != null)
-    //    //                    {
-    //    //                        HeartDebugHandler.debugLog(crash.ToString());
-    //    //                    }
-    //    //                    //HeartDebugHandler.debugLog("halt");
-    //    //                }
-
-    //    //                HeartDebugHandler.debugLog("e was not null");
-    //    //                if (e.Result != null)
-    //    //                {
-    //    //                    HeartDebugHandler.debugLog("e.Result was not null");
-    //    //                    byte[] result = e.Result;
-    //    //                    string resultText = Encoding.UTF8.GetString(result);
-    //    //                    HeartDebugHandler.debugLog(resultText);
-
-
-    //    //                    if (e.UserState.ToString().Equals("steps"))
-    //    //                    {
-    //    //                        stepsReceived = true;
-    //    //                        using (var heartBeatClient = new WebClient())
-    //    //                        {
-                                    
-
-
-
-    //    //                        }
-    //    //                    }
-    //    //                    else if (e.UserState.ToString().Equals("heartbeat"))
-    //    //                    {
-    //    //                        hbReceived = true;
-    //    //                    }
-    //    //                    else if (e.UserState.ToString().Equals("heartrate"))
-    //    //                    {
-    //    //                        hrReceived = true;
-    //    //                    }
-
-
-    //    //                    //TOAST HERE
-    //    //                    if (resultText.Length == 5)
-    //    //                    {
-    //    //                        //Toast.MakeText(context, "Code: " + resultText, ToastLength.Long).Show();
-    //    //                        //codeView.Text = resultText;
-    //    //                        //codeView.Visibility = ViewStates.Visible;
-
-    //    //                        if (e.UserState.ToString().Equals("steps"))
-    //    //                        {
-    //    //                            //stepsReceived = true;
-    //    //                            stepsResult = resultText;
-    //    //                        }else if (e.UserState.ToString().Equals("heartbeat"))
-    //    //                        {
-    //    //                            //hbReceived = true;
-    //    //                            hbResult = resultText;
-    //    //                        }
-    //    //                        else if (e.UserState.ToString().Equals("heartrate"))
-    //    //                        {
-    //    //                            //hrReceived = true;
-    //    //                            hrResult = resultText;
-    //    //                        }
-    //    //                        else
-    //    //                        {
-    //    //                            Toast.MakeText(context, "No match: " + e.UserState.ToString(), ToastLength.Long).Show();
-    //    //                        }
-    //    //                    }
-    //    //                    else
-    //    //                    {
-    //    //                        Toast.MakeText(context, "Upload failed, response: " + resultText, ToastLength.Long).Show();
-    //    //                        //codeView.Text = "Upload Failed..";
-    //    //                        //codeView.Visibility = ViewStates.Visible;
-    //    //                    }
-
-    //    //                    if (stepsReceived && hbReceived && hrReceived)
-    //    //                    {
-    //    //                        updateUIWithData(stepsResult, hbResult, hrResult, codeView);
-    //    //                    }
-
-    //    //                }
-    //    //                else
-    //    //                {
-    //    //                    HeartDebugHandler.debugLog("e.Result was null");
-    //    //                    HeartDebugHandler.debugLog("e.Error: " + e.Error);
-    //    //                }
-    //    //            }
-    //    //            else
-    //    //            {
-    //    //                HeartDebugHandler.debugLog("e was null");
-    //    //            }
-
-    //    //        };
-    //    //        */
-    //    //        stepsClient.UploadValuesCompleted += SendData;
-                
-    //    //        HeartDebugHandler.debugLog("Sending data");
-    //    //        stepsClient.UploadValuesAsync(new Uri(url), "POST", stepsValues, "steps");
-    //    //        stepsClient.UploadValuesAsync(new Uri(url), "POST", heartBeatValues, "heartbeat");
-    //    //        stepsClient.UploadValuesAsync(new Uri(url), "POST", heartRateValues, "heartRate");
-                
-    //    //        //Toast.MakeText(context, Encoding.UTF8.GetString(result), ToastLength.Long);
-    //    //    }
-    //    //}
-
-    //    public static void updateUIWithData(string stepsCode, string hbCode, string hrCode, TextView codeView)
-    //    {
-    //        string endString = "Codes: " + "\n";
-    //        if (stepsCode != null && stepsCode.Length == 5)
-    //        {
-    //            endString += "Steps: " + stepsCode + "\n";
-    //        }
-    //        else
-    //        {
-    //            endString += "Steps: " + "Failed/No data" + "\n";
-    //        }
-    //        if (hrCode != null && hrCode.Length == 5)
-    //        {
-    //            endString += "HRate: " + hrCode + "\n";
-    //        }
-    //        else
-    //        {
-    //            endString += "HRate: " + "Failed/No data" + "\n";
-    //        }
-    //        if (hbCode != null && hbCode.Length == 5)
-    //        {
-    //            endString += "HBeat: " + hbCode;
-    //        }
-    //        else
-    //        {
-    //            endString += "HBeat: " + "Failed/No data" + "\n";
-    //        }
-
-    //        codeView.Text = "Upload Failed..";
-    //        codeView.Visibility = ViewStates.Visible;
-
-    //    }
-
-    //    public static async Task<string> sendPostRequestAlternate()
-    //    {
-            
-    //        //RequestBody formBody = new FormBody.Builder()
-    //        //    .Add("hdatatype", "StepCount")
-    //        //    .Add("hupdated", "2019-09-05T08:58:57.5367850+02:00")
-    //        //    .Add("hdatapoints", "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\r\n\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\r\n\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\r\n\"value\": 4}]")
-    //        //    .Build();
-
-    //        //OkHttpClient client = new OkHttpClient();
-    //        //Request request = new Request.Builder()
-    //        //    .Url("https://heartanalyzer.azurewebsites.net/")
-    //        //    .Post(formBody)
-    //        //    .Build();
-            
-    //        //Response response = client.NewCall(request).Execute();
-    //        //return response.Body().String();
-    //        return await SendPostRequestTask("");
-    //    }
-
-
-    //    private static async Task<string> SendPostRequestTask(string data)
-    //    {
-    //        RequestBody formBody = new FormBody.Builder()
-    //            .Add("hdatatype", "StepCountTest")
-    //            .Add("hupdated", "2019-09-05T08:58:57.5367850+02:00")
-    //            .Add("hdatapoints", "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\r\n\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\r\n\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\r\n\"value\": 4}]")
-    //            .Build();
-
-    //        try
-    //        {
-
-    //            //OkHttpClient client = new OkHttpClient();
-    //            OkHttpClient client = new OkHttpClient.Builder()
-    //                .ConnectTimeout(30, TimeUnit.Seconds)
-    //                .WriteTimeout(30, TimeUnit.Seconds)
-    //                .ReadTimeout(30, TimeUnit.Seconds)
-    //                .Build();
-
-    //            Request request = new Request.Builder()
-    //                .Url("https://heartanalyzer.azurewebsites.net/")
-    //                .Post(formBody)
-    //                .Build();
-    //            //Response response = client.NewCall(request).Execute();
-    //            Response response = await client.NewCall(request).ExecuteAsync();
-
-    //            return response.Body().String();
-
-    //        }
-    //        catch (Java.Net.SocketTimeoutException e)
-    //        {
-    //            HeartDebugHandler.debugLog("Java.Net.SocketTimeoutException thrown");
-    //            //throw;
-    //            return "Java.Net.SocketTimeoutException thrown";
-    //        }
-    //    }
-
-
-    //}
-
-    
 
 }
 
