@@ -241,13 +241,17 @@ namespace DataLayer
             return dataPoints; //return actual value
         }
         
+        /// <summary>
+        /// Takes a filename, requests a file(list of objects), converts it into a string(in json formatting) then returns the string.
+        /// </summary>
+        /// <param name="filename">The filename of the file to request</param>
+        /// <returns>string with json content</returns>
         internal static async Task<string> getJSONString(string filename)
         {
-
             //string example = "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]";
             List<HeartDataPoint> list = await getData(filename);
+            //todo move into class definition instead, so that it is handled in a more appropriate location, should probs be called something like toJSONString() or simply toJSON()
             StringBuilder stringBuilder = new StringBuilder("[");
-
             if (list != null)
             {
                 for (int i = 0; i < list.Count; i++)
@@ -270,9 +274,14 @@ namespace DataLayer
             return stringBuilder.ToString();
         }
 
-
-
-
+        /// <summary>
+        /// The main task for writing the data to file; it get's the full set of data going in to the file,
+        /// it then deletes the current file(if it exists) and creates a new file containing the incoming data, it then updates the status(TextView) of the app
+        /// </summary>
+        /// <param name="dataPoints"></param>
+        /// <param name="fileName"></param>
+        /// <param name="dataStatusHandler"></param>
+        /// <returns></returns>
         private static async Task storeDataPointsTask(List<HeartDataPoint> dataPoints, string fileName, StatusHandler dataStatusHandler)
         {
             if (dataPoints != null && dataPoints.Count > 0)
@@ -286,9 +295,11 @@ namespace DataLayer
                 string filePath = System.Environment.GetFolderPath(Environment.SpecialFolder.Personal);
 
                 string backingFile = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), fileName);
+                // TODO: "FILESTORAGE" [0] this needs a better solution, writing to temp and replacing it solves most file loss, but not ram usage, so should probably use appending so you don't need to read the whole file to memory every time
+                // TODO: "FILESTORAGE" cont [1]: this should probably use a version of https://stackoverflow.com/a/39562216 but instead of dropping the last few lines, you store them and add them back into the file after adding the new objects
 
                 Java.IO.File file = new Java.IO.File(backingFile);
-                if (file.Exists())
+                if (file.Exists())//if the file exists, delete it.// TODO: "FILESTORAGE" cont [2]: this is probably where it should be split into two different methods, one for storing and creating a new file, and one for 'appending'
                 {
                     HeartDebugHandler.debugLog("File already exists, will be overwritten");
                     file.Delete();
@@ -298,7 +309,7 @@ namespace DataLayer
 
                 using (var writer = System.IO.File.CreateText(backingFile))
                 {
-                    //await writer.WriteLineAsync(count.ToString());
+                    //made these to make the print statements a bit more readable(although they could probably be made better).
                     var indentOne = "\t";
                     var indentTwo = "\t\t";
                     var indentThree = "\t\t\t";
@@ -343,29 +354,41 @@ namespace DataLayer
                 dataStatusHandler.updateStatus("No data to store");
             }
         }
-
+        /// <summary>
+        /// simple to call, adds a parameter and calls the delete method
+        /// </summary>
         public static void DeleteHeartRateData()
         {
             DeleteDataFile(FILENAME_HEARTRATE);
         }
-
+        /// <summary>
+        /// simple to call, adds a parameter and calls the delete method
+        /// </summary>
         internal static void DeleteHeartBeatData()
         {
             DeleteDataFile(FILENAME_HEARTBEAT);
         }
-
+        /// <summary>
+        /// simple to call, adds a parameter and calls the delete method
+        /// </summary>
         internal static void DeleteStepsData()
         {
             DeleteDataFile(FILENAME_STEPS);
         }
-
+        /// <summary>
+        /// simple to call, runs the delete method for all files; considered using the other methods, but decided this is better in case there are other files you
+        /// can't delete as a user, then this would fit in better; otherwise those would need their own methods as well, which for now seems a bit excessive.
+        /// </summary>
         internal static void DeleteAllData()
         {
             DeleteDataFile(FILENAME_HEARTRATE);
             DeleteDataFile(FILENAME_HEARTBEAT);
             DeleteDataFile(FILENAME_STEPS);
         }
-
+        /// <summary>
+        /// takes a filename, and if that file exists, it gets deleted.
+        /// </summary>
+        /// <param name="filename"></param>
         private static void DeleteDataFile(string filename)
         {
             string fileString = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), filename);
