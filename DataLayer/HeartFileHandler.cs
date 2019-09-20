@@ -16,6 +16,9 @@ using Environment = System.Environment;
 
 namespace DataLayer
 {
+    /// <summary>
+    /// A class handling all the file interactions.
+    /// </summary>
     class HeartFileHandler
     {
         //The three different files data is stored in
