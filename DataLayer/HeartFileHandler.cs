@@ -18,23 +18,39 @@ namespace DataLayer
 {
     class HeartFileHandler
     {
+        //The three different files data is stored in
         public const string FILENAME_STEPS = "stepsdata.json";
         public const string FILENAME_HEARTRATE = "hratedata.json";
         public const string FILENAME_HEARTBEAT = "hbeatdata.json";
-
+        //An array storing the save status for each of the files, so we don't try to double write to one.
         private static string[] beingSaved = new string[3];
 
+        //TODO: should probably think a little bit harder about how I'm using these task and async classes; could probably be condensed in some ways.
+        
+        /// <summary>
+        /// just a go between class for getting the data using a task, so it can be awaited
+        /// </summary>
+        /// <param name="filename">is the filename passed through the task for reading.</param>
+        /// <returns></returns>
         public static Task<List<HeartDataPoint>> getData(string filename)
         {
             return ReadDataPointsTask(filename);
         }
 
+        /// <summary>
+        /// Takes in a list(QUEUE) and stores it in a file with the provided filename, it then updates the application status(TextView) to make the user aware the file has been saved
+        /// </summary>
+        /// <param name="hdata">The list of items to be stored</param>
+        /// <param name="filename">The filename of the file to store the data in</param>
+        /// <param name="dataStatusHandler">the handler of the textview for statuses in the app gui</param>
         public static async void saveData(Queue<HeartDataPoint> hdata, string filename, StatusHandler dataStatusHandler)
         {
 
-            bool cancelOp = false;
+            bool cancelOp = false; //if this trips to true, then file won't be stored
             int selected = -1;
 
+
+            //handling of "file already being manipulated" checks
             switch (filename)
             {
                 case FILENAME_STEPS: selected = 0;
@@ -53,9 +69,9 @@ namespace DataLayer
             {
                 cancelOp = true;
             }
+            //first file manip check done
 
-
-            if (!cancelOp)
+            if (!cancelOp)//if file is being manipulated, don't continue
             {
                 HeartDebugHandler.debugLog("Save start");
                 List<HeartDataPoint> existingData;
@@ -85,7 +101,8 @@ namespace DataLayer
                 await storeDataPointsTask(existingData, filename, dataStatusHandler);
 
 
-
+                //now reset the file being saved to null, so that the program knows it can be used again
+                //todo: look into whether this can all be handled using a callback instead, and whether that's more efficient
                 if (filename.Equals(FILENAME_STEPS))
                 {
                     beingSaved[0] = null;
@@ -97,18 +114,21 @@ namespace DataLayer
                 {
                     beingSaved[2] = null;
                 }
-
-
             }
             else
             {
+                //setting the status TextView to this string
                 dataStatusHandler.updateStatus("Data already being saved");
             }
 
         }
 
         
-
+        /// <summary>
+        /// Reads data from a file, and converts it into instances of the HeartData class, then returns an awaitable task with that data at the end of it.
+        /// </summary>
+        /// <param name="fileName">The filename of the file that is to be read.</param>
+        /// <returns></returns>
         private static async Task<List<HeartDataPoint>> ReadDataPointsTask(string fileName)
         {
             string backingFile = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), fileName);
@@ -118,7 +138,8 @@ namespace DataLayer
             if (backingFile == null || !System.IO.File.Exists(backingFile))
             {
                 HeartDebugHandler.debugLog("File does not exist");
-                return null;
+                //REMARK: this is checked against, so make sure you know what you do if you do any change to return value
+                return null; //cancel operation
             }
             HeartDebugHandler.debugLog("file exists");
             List<HeartDataPoint> dataPoints = new List<HeartDataPoint>();
@@ -132,6 +153,8 @@ namespace DataLayer
                 bool dataReached = false;
                 bool param1Found = false;
                 bool param2Found = false;
+
+                //TODO: move this into the class definition of the dataclass, probably as a builder/factory or some fitting pattern, probably a better place to handle it.
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
                     if (!dataReached && line.Contains("dataType"))
@@ -217,35 +240,7 @@ namespace DataLayer
 
             return dataPoints; //return actual value
         }
-
-        internal static async Task<string> getJSONString()
-        {
-
-            //string example = "[{\"dateTime\": \"2019-09-05T08:58:57.5367850+02:00\",\"value\": 10},{\"dateTime\": \"2019-09-05T13:34:37.7470520+02:00\",\"value\": 11},{\"dateTime\": \"2019-09-05T13:35:37.7470520+02:00\",\"value\": 4}]";
-            List<HeartDataPoint> list = await getData(FILENAME_STEPS);
-            StringBuilder stringBuilder = new StringBuilder("[");
-
-            for(int i = 0; i < list.Count; i++)
-            {
-                HeartDataPoint x = list[i];
-                stringBuilder.Append("{\"dateTime\": ");
-                stringBuilder.Append("\"");
-                stringBuilder.Append(x.timestamp.ToString("O"));
-                stringBuilder.Append("\"");
-                stringBuilder.Append(",\"value\": ");
-                stringBuilder.Append(x.amount.ToString());
-                stringBuilder.Append("}");
-                if (i < list.Count - 1)
-                {
-                    stringBuilder.Append(",");
-                }
-            };
-
-            stringBuilder.Append("]");
-            return stringBuilder.ToString();
-        }
-
-
+        
         internal static async Task<string> getJSONString(string filename)
         {
 

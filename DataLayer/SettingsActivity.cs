@@ -80,31 +80,6 @@ namespace DataLayer
             StartActivity(intent);
         }
 
-        /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
-        /// </summary>
-        /// <param name="view"></param>
-        [Export("onTestPostRequest")]
-        public async void onTestPostRequest(View view)
-        {
-            TextView codeView = FindViewById<TextView>(Resource.Id.CodeTextViewCode);
-            codeView.Visibility = ViewStates.Invisible;
-
-            HeartDebugHandler.debugLog("Getting json string");
-            string jsonString = await HeartFileHandler.getJSONString();
-
-            //HeartDebugHandler.debugLog(jsonString.Substring(jsonString.Length-30));
-            HeartDebugHandler.debugLog("String got, length: " + jsonString.Length);
-
-            HeartDebugHandler.debugLog("Sending data");
-
-            //HeartNetworkHandler.sendPostRequest(this, jsonString, codeView);
-
-            // -- var response = await HeartNetworkHandler.sendPostRequest();
-            // -- HeartDebugHandler.debugLog("Java.Net.SocketTimeoutException thrown");
-            // -- Toast.MakeText(this, response, ToastLength.Long);
-        }
-
 
     }
 }

@@ -424,12 +424,6 @@ namespace DataLayer
 			// aapt resource value: 0x7f0a0016
 			public const int AppTitle = 2131361814;
 			
-			// aapt resource value: 0x7f0a003c
-			public const int CodeTextView = 2131361852;
-			
-			// aapt resource value: 0x7f0a003d
-			public const int CodeTextViewCode = 2131361853;
-			
 			// aapt resource value: 0x7f0a0015
 			public const int CustomActionBar = 2131361813;
 			
@@ -448,8 +442,8 @@ namespace DataLayer
 			// aapt resource value: 0x7f0a001d
 			public const int SendAllDataButton = 2131361821;
 			
-			// aapt resource value: 0x7f0a003e
-			public const int SettingsBackButton = 2131361854;
+			// aapt resource value: 0x7f0a003b
+			public const int SettingsBackButton = 2131361851;
 			
 			// aapt resource value: 0x7f0a0036
 			public const int SettingsTitleText = 2131361846;
@@ -558,9 +552,6 @@ namespace DataLayer
 			
 			// aapt resource value: 0x7f0a002a
 			public const int notification_main_column_container = 2131361834;
-			
-			// aapt resource value: 0x7f0a003b
-			public const int postRequestTestButton = 2131361851;
 			
 			// aapt resource value: 0x7f0a0031
 			public const int right_icon = 2131361841;
