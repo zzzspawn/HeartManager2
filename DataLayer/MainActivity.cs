@@ -27,19 +27,22 @@ using Microcharts;
 using SkiaSharp;
 using Environment = System.Environment;
 using File = Java.IO.File;
+//TODO: clean up imports, this applies to everything(although do other todo's first, in case they're needed (Dependency managment is hard in C# and xamarin))
 
 namespace DataLayer
 {
+    //TODO: maybe move some functionality away from the home screen, maybe
     /// <summary>
-    /// Receives its own events using a listener API designed for foreground activities. Updates a data item every second while it is open.
-    /// Also allows user to take a photo and send that as an asset to the paired wearable.
+    /// This activity does most everything in the application, except from deleting data, that is done in the settings
     /// </summary>
     [Activity(MainLauncher = true, Label = "@string/app_name", LaunchMode = LaunchMode.SingleTask,
         Icon = "@drawable/ic_launcher")]
     public class MainActivity : Activity, IDataApiDataListener, IMessageApiMessageListener, INodeApiNodeListener,
         GoogleApiClient.IConnectionCallbacks, GoogleApiClient.IOnConnectionFailedListener
     {
+        //Path to look for incoming data
         const string DataPointsPath = "/data-points";
+        //amount of times to try connecting to the wearable again if you can't connect, better than trying to resolve errors, as that just turns into a right mess(As in better to sever connection and try again)..
         private const int maxConnectionAttempts = 10;
         private int connectionAttempts;
         GoogleApiClient mGoogleApiClient;
@@ -51,7 +54,8 @@ namespace DataLayer
 
         private Handler handler;
 
-        private Queue<HeartDataPoint> hdata_Rate;
+        //received data, not saved yet
+        private Queue<HeartDataPoint> hdata_Rate; 
         private Queue<HeartDataPoint> hdata_Beat;
         private Queue<HeartDataPoint> hdata_Steps;
 
