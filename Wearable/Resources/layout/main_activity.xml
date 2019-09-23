@@ -3,26 +3,39 @@
     android:id="@+id/layout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    <Button
-      android:id="@+id/sendMessageBtn"
-      android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send message (Test)"
-        android:onClick="onSendMessageBtnClick"
-        android:enabled="false"
-        android:layout_centerHorizontal="true"
-    />
+    
 
     <TextView
-        android:id="@+id/intro"
+        android:id="@+id/connectionStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:textSize="20sp"
         android:fontFamily="sans-serif-condensed-light"
         android:text="Connecting.." 
-        android:layout_marginBottom="30dp"    
+    />
+
+    <TextView
+      android:id="@+id/sensorStatus"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_centerHorizontal="true"
+      android:layout_above="@id/connectionStatus"
+      android:textSize="20sp"
+      android:fontFamily="sans-serif-condensed-light"
+      android:text="Sensor event"
+    />
+
+    <TextView
+      android:id="@+id/dataStatus"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_centerHorizontal="true"
+      android:layout_below="@id/connectionStatus"
+      android:textSize="20sp"
+      android:fontFamily="sans-serif-condensed-light"
+      android:text="Data sent.." 
     />
 
     <Button
@@ -30,16 +43,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
         android:text="Start Tracking"
         android:onClick="onStartTracking"
+        android:layout_above="@id/sensorStatus"
     />
     <Button
       android:id="@+id/trackingbuttonstop"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_centerHorizontal="true"
-      android:layout_below="@id/trackingbutton"
+      android:layout_below="@id/dataStatus"
       android:text="Stop Tracking"
       android:onClick="onStopTracking"
     />

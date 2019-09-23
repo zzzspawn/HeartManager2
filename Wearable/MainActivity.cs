@@ -26,6 +26,7 @@ using Android.Runtime;
 using Android.Support.Design.Widget;
 using Android.Support.V4.App;
 using Android.Support.V4.Content;
+using DataLayer;
 using Xamarin.Essentials;
 
 namespace Wearable
@@ -48,11 +49,17 @@ namespace Wearable
 
 		GoogleApiClient googleApiClient;
 		//ListView dataItemList;
-		TextView introText;
-		//DataItemAdapter dataItemListAdapter;
-		View layout;
+		private TextView connectionTextView;
+        private TextView dataStatusTextView;
+        private TextView sensorDataTextView;
+
+        private StatusHandler connectionStatusHandler;
+        private StatusHandler dataStatusHandler;
+        private StatusHandler sensorStatusHandler;
+
+        //DataItemAdapter dataItemListAdapter;
+        View layout;
 		Handler handler;
-        View SendFunMessageBtn;
 
         SensorManager sensorManager;
         Sensor heartRatesensor;
@@ -105,11 +112,11 @@ namespace Wearable
             if (!googleApiClient.IsConnected && !googleApiClient.IsConnecting)
             {
                 googleApiClient.Connect();
-                introText.Text = "Connecting";
+                connectionStatusHandler.updateStatus("Connecting");
                 debugLog("Connecting");
                 WearableClass.DataApi.AddListener(googleApiClient, this);
             }
-            introText.Visibility = ViewStates.Visible;
+            //connectionTextView.Visibility = ViewStates.Visible;
         }
 
         /// <summary>
@@ -120,12 +127,12 @@ namespace Wearable
             base.OnPause();
             debugLog("Pausing App");
 
-            introText.Visibility = ViewStates.Visible;
+            //connectionTextView.Visibility = ViewStates.Visible;
             if (googleApiClient.IsConnected)
             {
                 googleApiClient.Disconnect();
                 debugLog("Disconnecting");
-                introText.Text = "Disconnecting";
+                connectionStatusHandler.updateStatus("Disconnecting");
             }
         }
 
@@ -150,9 +157,17 @@ namespace Wearable
         /// </summary>
         private void setUpViews()
         {
-            introText = (TextView)FindViewById(Resource.Id.intro);
+            dataStatusTextView = (TextView)FindViewById(Resource.Id.dataStatus);
+            connectionTextView = (TextView)FindViewById(Resource.Id.connectionStatus);
+            sensorDataTextView = (TextView)FindViewById(Resource.Id.sensorStatus);
+
+            dataStatusHandler = new StatusHandler(dataStatusTextView, "No data change");
+            connectionStatusHandler = new StatusHandler(connectionTextView, "No connection change");
+            sensorStatusHandler = new StatusHandler(sensorDataTextView, "No sensor change");
+
+
             layout = FindViewById(Resource.Id.layout);
-            SendFunMessageBtn = FindViewById(Resource.Id.sendMessageBtn);
+            
         }
         /// <summary>
         /// Fetches references to the sensors, through the SensorManager class
@@ -188,6 +203,7 @@ namespace Wearable
             {
                 stepCounter = null;
             }
+            sensorStatusHandler.updateStatus("Sensors ready");
         }
 
         //TODO: find a way to make sure data get's processed even when you leave the app, as the sensors seem to still be tracking it would seem like it should be possible
@@ -209,16 +225,19 @@ namespace Wearable
             {
                 sensorManager.RegisterListener(this, stepCounter, SensorDelay.Fastest);
             }
+            sensorStatusHandler.updateStatus("Sensors tracking");
         }
         /// <summary>
         /// Unregisters all sensor listeners, haven't found a way to unregister one
         /// </summary>
         private void stopSensorTracking()
         {
+            //TODO: find out why I check for !null on one specific sensor here
             if (heartRatesensor != null)
             {
                 sensorManager.UnregisterListener(this);
             }
+            sensorStatusHandler.updateStatus("Sensors stopped listening");
         }
         /// <summary>
         /// Standardized call to log.info with the same tag
@@ -244,8 +263,7 @@ namespace Wearable
 		{
             debugLog("Connection established");
             WearableClass.DataApi.AddListener(googleApiClient, this);
-            introText.Visibility = ViewStates.Gone;
-            SendFunMessageBtn.Enabled = true;
+            //connectionTextView.Visibility = ViewStates.Gone;
         }
         /// <summary>
         /// Removes the listener from the dataApi
@@ -255,11 +273,9 @@ namespace Wearable
 		{
             debugLog("Connection suspended");
             WearableClass.DataApi.RemoveListener(googleApiClient, this);
+            //connectionTextView.Visibility = ViewStates.Visible;
+            connectionStatusHandler.updateStatus("Connection Suspended");
 
-            SendFunMessageBtn.Enabled = false;
-            introText.Visibility = ViewStates.Visible;
-            introText.Text = "Connection Suspended";
-            
         }
         /// <summary>
         /// Removes the listener from the dataApi
@@ -269,9 +285,8 @@ namespace Wearable
 		{
             debugLog("Connection failed");
             WearableClass.DataApi.RemoveListener(googleApiClient, this);
-            SendFunMessageBtn.Enabled = false;
-            introText.Visibility = ViewStates.Visible;
-            introText.Text = "Connection Failed";
+            //connectionTextView.Visibility = ViewStates.Visible;
+            connectionStatusHandler.updateStatus("Connection Failed");
         }
         /// <summary>
         /// Informs the user that the peer has connected
@@ -280,7 +295,7 @@ namespace Wearable
         public void OnPeerConnected(INode node)
         {
             debugLog("Peer connected");
-            introText.Visibility = ViewStates.Gone;
+            //connectionTextView.Visibility = ViewStates.Gone;
         }
 
         /// <summary>
@@ -290,8 +305,8 @@ namespace Wearable
         public void OnPeerDisconnected(INode node)
         {
             debugLog("Peer disconnected");
-            introText.Visibility = ViewStates.Visible;
-            introText.Text = "Disconnected";
+            //connectionTextView.Visibility = ViewStates.Visible;
+            connectionStatusHandler.updateStatus("Disconnected");
         }
 
         /// <summary>
@@ -301,6 +316,7 @@ namespace Wearable
         public void OnDataChanged(DataEventBuffer dataEvents)
         {
             debugLog("Data changed");
+            dataStatusHandler.updateStatus("Data changed");
             var dataEvent = Enumerable.Range(0, dataEvents.Count)
                 .Select(i => JavaObjectExtensions.JavaCast<IDataEvent>(dataEvents.Get(i)))
                 .FirstOrDefault(x => x.Type == DataEvent.TypeChanged && x.DataItem.Uri.Path.Equals(TestDataPath));
@@ -337,6 +353,7 @@ namespace Wearable
         {
             debugLog("Start tracking clicked");
             startSensorTracking();
+            sensorStatusHandler.updateStatus("Sensors tracking");
         }
 
         /// <summary>
@@ -348,6 +365,7 @@ namespace Wearable
         {
             debugLog("Start tracking clicked");
             stopSensorTracking();
+            sensorStatusHandler.updateStatus("Sensors not tracking");
         }
 
         /// <summary>
@@ -388,6 +406,7 @@ namespace Wearable
                     debugLog("Accuracy changed for heart rate sensor");
                 }
             }
+            sensorStatusHandler.updateStatus("Sensor accuracy changed");
         }
 
         /// <summary>
@@ -397,6 +416,7 @@ namespace Wearable
         /// <param name="e"></param>
         public void OnSensorChanged(SensorEvent e)
         {
+            sensorStatusHandler.updateStatus("New sensor data");
             debugLog("Sensor Changed");
             if (e.Sensor != null)
             {
@@ -422,7 +442,6 @@ namespace Wearable
                 debugLog("Amount of datapoints queued: " + dataPoints.Count);
                 if (dataPoints.Count > 0)
                 {
-                    debugLog("Trying to send data");
                     trySendData();
                 }
 
@@ -442,6 +461,7 @@ namespace Wearable
         /// </summary>
         private void trySendData()
         {
+            dataStatusHandler.updateStatus("Trying to Send data");
             string message = "";
             Queue<HeartDataPoint> backupList = new Queue<HeartDataPoint>();
             for (var i = 0; i < 100 && dataPoints.Count > 0; i++)
@@ -465,11 +485,14 @@ namespace Wearable
             if (message != null && message != "")
             {
                 debugLog("Sending multiple datapoints");
+                dataStatusHandler.updateStatus("Sending data");
                 SendData(message, DataPointsPath);
+
             }
             else
             {
                 debugLog("Sending multiple datapoints failed, message was null or blank");
+                dataStatusHandler.updateStatus("Data could not be sent");
             }
             
 
@@ -489,12 +512,12 @@ namespace Wearable
                 map.PutString("Message", data);
                 map.PutLong("UpdatedAt", DateTime.UtcNow.Ticks);
                 WearableClass.DataApi.PutDataItem(googleApiClient, request.AsPutDataRequest());
+                dataStatusHandler.updateStatus("Data sent");
             }
             finally
             {
                 //_client.Disconnect();
             }
-
         }
         
         /// <summary>
