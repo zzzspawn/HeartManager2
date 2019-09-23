@@ -30,9 +30,9 @@ using Xamarin.Essentials;
 
 namespace Wearable
 {
-
+    //TODO: find out what the parameters in activity does, and remove those not needed.
 	/// <summary>
-	/// Shows events and photo from the Wearable APIs
+	/// wearable activity, sends data from sensors to handheld
 	/// </summary>
 	[Activity (Label = "Wearable", 
 		MainLauncher = true,
@@ -67,11 +67,16 @@ namespace Wearable
         const string DataPointsPath = "/data-points";
         const string TestDataPath = "/data-test";
         private int BODYSENSOR_CODE = 123; //needed to check if the permission you asked for is the same you got the result for
+        /// <summary>
+        /// inits the activity and asks the screen to stay on
+        /// </summary>
+        /// <param name="bundle"></param>
         protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
             handler = new Handler ();
             SetContentView (Resource.Layout.main_activity);
+            //TODO: Find out if keeping the screen on really is necessary
 			Window.AddFlags (WindowManagerFlags.KeepScreenOn);
             debugLog("App Launched");
 
@@ -89,6 +94,10 @@ namespace Wearable
 				.AddOnConnectionFailedListener (this)
 				.Build ();
 		}
+
+        /// <summary>
+        /// if not currently connecting the app will try connecting to handheld
+        /// </summary>
         protected override void OnResume()
         {
             base.OnResume();
@@ -102,6 +111,10 @@ namespace Wearable
             }
             introText.Visibility = ViewStates.Visible;
         }
+
+        /// <summary>
+        /// Will try to disconnect from the handheld if it is connected
+        /// </summary>
         protected override void OnPause()
         {
             base.OnPause();
@@ -116,6 +129,9 @@ namespace Wearable
             }
         }
 
+        /// <summary>
+        /// Checks if you have sensor permissions(should be available, but just in case)
+        /// </summary>
         private void setUpPermissions()
         {
             debugLog("Checking Permissions");
@@ -129,12 +145,18 @@ namespace Wearable
                 debugLog("Permissions exist and allow use");
             }
         }
+        /// <summary>
+        /// Fetches view references and sets them to variables
+        /// </summary>
         private void setUpViews()
         {
             introText = (TextView)FindViewById(Resource.Id.intro);
             layout = FindViewById(Resource.Id.layout);
             SendFunMessageBtn = FindViewById(Resource.Id.sendMessageBtn);
         }
+        /// <summary>
+        /// Fetches references to the sensors, through the SensorManager class
+        /// </summary>
         private void setUpSensors()
         {
             sensorManager = (SensorManager)GetSystemService(Context.SensorService);
@@ -167,6 +189,12 @@ namespace Wearable
                 stepCounter = null;
             }
         }
+
+        //TODO: find a way to make sure data get's processed even when you leave the app, as the sensors seem to still be tracking it would seem like it should be possible
+        /// <summary>
+        /// Actually starts the sensors tracking, they will continue tracking until you stop listening
+        /// although the callbacks don't seem to be called properly if you exit the app
+        /// </summary>
         private void startSensorTracking()
         {
             if (heartRatesensor != null)
@@ -182,6 +210,9 @@ namespace Wearable
                 sensorManager.RegisterListener(this, stepCounter, SensorDelay.Fastest);
             }
         }
+        /// <summary>
+        /// Unregisters all sensor listeners, haven't found a way to unregister one
+        /// </summary>
         private void stopSensorTracking()
         {
             if (heartRatesensor != null)
@@ -189,15 +220,26 @@ namespace Wearable
                 sensorManager.UnregisterListener(this);
             }
         }
+        /// <summary>
+        /// Standardized call to log.info with the same tag
+        /// </summary>
+        /// <param name="text"></param>
         private void debugLog(string text)
         {
             Log.Info("HH_TEST", text);
         }
+        /// <summary>
+        /// starts the permissions check
+        /// </summary>
+        /// <returns></returns>
         private bool checkPermissions()
         {
             return ContextCompat.CheckSelfPermission(this, Manifest.Permission.BodySensors) == (int) Permission.Granted;
         }
-        
+        /// <summary>
+        /// Starts listening for data, 
+        /// </summary>
+        /// <param name="bundle"></param>
         public void OnConnected (Bundle bundle)
 		{
             debugLog("Connection established");
@@ -205,6 +247,10 @@ namespace Wearable
             introText.Visibility = ViewStates.Gone;
             SendFunMessageBtn.Enabled = true;
         }
+        /// <summary>
+        /// Removes the listener from the dataApi
+        /// </summary>
+        /// <param name="p0"></param>
         public void OnConnectionSuspended (int p0)
 		{
             debugLog("Connection suspended");
@@ -215,6 +261,10 @@ namespace Wearable
             introText.Text = "Connection Suspended";
             
         }
+        /// <summary>
+        /// Removes the listener from the dataApi
+        /// </summary>
+        /// <param name="result"></param>
         public void OnConnectionFailed (Android.Gms.Common.ConnectionResult result)
 		{
             debugLog("Connection failed");
@@ -223,11 +273,20 @@ namespace Wearable
             introText.Visibility = ViewStates.Visible;
             introText.Text = "Connection Failed";
         }
+        /// <summary>
+        /// Informs the user that the peer has connected
+        /// </summary>
+        /// <param name="node"></param>
         public void OnPeerConnected(INode node)
         {
             debugLog("Peer connected");
             introText.Visibility = ViewStates.Gone;
         }
+
+        /// <summary>
+        /// Informs the user that the peer has disconnected
+        /// </summary>
+        /// <param name="node"></param>
         public void OnPeerDisconnected(INode node)
         {
             debugLog("Peer disconnected");
@@ -235,10 +294,13 @@ namespace Wearable
             introText.Text = "Disconnected";
         }
 
+        /// <summary>
+        /// Receives data from handheld; this isn't really used, but is handy for connection tests and such
+        /// </summary>
+        /// <param name="dataEvents"></param>
         public void OnDataChanged(DataEventBuffer dataEvents)
         {
             debugLog("Data changed");
-
             var dataEvent = Enumerable.Range(0, dataEvents.Count)
                 .Select(i => JavaObjectExtensions.JavaCast<IDataEvent>(dataEvents.Get(i)))
                 .FirstOrDefault(x => x.Type == DataEvent.TypeChanged && x.DataItem.Uri.Path.Equals(TestDataPath));
@@ -246,7 +308,6 @@ namespace Wearable
             {
                 return;
             }
-
             else
             {
                 var dataMapItem = DataMapItem.FromDataItem(dataEvent.DataItem);
@@ -254,13 +315,11 @@ namespace Wearable
                 string message = dataMapItem.DataMap.GetString("Message");
                 debugLog("Test data actually received! message: " + message);
             }
-            
-
         }
 
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Sends a message to the handheld
         /// </summary>
         /// <param name="view"></param>
         [Export("onSendMessageBtnClick")]
@@ -270,26 +329,18 @@ namespace Wearable
         }
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// initiates tracking on the sensors
         /// </summary>
         /// <param name="view"></param>
         [Export("onStartTracking")]
         public void onStartTracking(View view)
         {
             debugLog("Start tracking clicked");
-            //onSendDatapoint(HeartDataType.StepCount, 10);
-
             startSensorTracking();
-
-            //DateTime dateToSave = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
-            //string dateString = dateToSave.ToString("o");
-            //string message;
-            //message = HeartDataType.StepCount.ToString("G") + ";" + "10" + ";" + dateString;
-            //SendData(message, DataPointPath);
         }
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Stops tracking on the sensors
         /// </summary>
         /// <param name="view"></param>
         [Export("onStopTracking")]
@@ -299,6 +350,9 @@ namespace Wearable
             stopSensorTracking();
         }
 
+        /// <summary>
+        /// Enum that is used to keep track of data-type
+        /// </summary>
         public enum HeartDataType
         {
             None,
@@ -307,6 +361,12 @@ namespace Wearable
             StepCount//test type for quick data
         }
 
+        //TODO: store sensor accuracy in a global variable(one for each sensor(array?)), and then just update the variable in OnAccuracyChanged, and include it with The datapoints
+        /// <summary>
+        /// if a sensors accuracy changes then this gets called
+        /// </summary>
+        /// <param name="sensor"></param>
+        /// <param name="accuracy"></param>
         public void OnAccuracyChanged(Sensor sensor, [GeneratedEnum] SensorStatus accuracy)
         {
             if (sensor != null) 
@@ -329,6 +389,12 @@ namespace Wearable
                 }
             }
         }
+
+        /// <summary>
+        /// This is where the sensor data is stored/tracked, if there is data, it tries to send it.
+        /// if the data get's sent, then it is dequeued from the data-point list.
+        /// </summary>
+        /// <param name="e"></param>
         public void OnSensorChanged(SensorEvent e)
         {
             debugLog("Sensor Changed");
@@ -369,6 +435,11 @@ namespace Wearable
 
             }
         }
+
+        /// <summary>
+        /// Trying to send data stored the data-point list; sends the data as a string.
+        /// Only queues data for a 100 datapoints at a time, to avoid too long a string/message
+        /// </summary>
         private void trySendData()
         {
             string message = "";
@@ -403,7 +474,12 @@ namespace Wearable
             
 
         }
-        //Alternate universe data sending START
+        
+        /// <summary>
+        /// Actually sends the data
+        /// </summary>
+        /// <param name="data">The string to be sent</param>
+        /// <param name="path">the path where the data can be found</param>
         public void SendData(string data, string path)
         {
             try
@@ -420,7 +496,10 @@ namespace Wearable
             }
 
         }
-        //Alternate universe data sending END
+        
+        /// <summary>
+        /// The data-point class, stores type, amount, timestamp and hopefully sensor accuracy eventually
+        /// </summary>
         private class HeartDataPoint
         {
             public HeartDataType heartType { get; }
@@ -434,6 +513,12 @@ namespace Wearable
             }
 
         }
+        /// <summary>
+        ///This is called after we've requested permissions to use the body sensors.
+        /// </summary>
+        /// <param name="requestCode">Predefined code that is sent with the original request, used to verify which permission you got a callback from</param>
+        /// <param name="permissions"></param>
+        /// <param name="grantResults"></param>
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             if (requestCode == BODYSENSOR_CODE)
@@ -462,6 +547,10 @@ namespace Wearable
                 base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
             }
         }
+        /// <summary>
+        /// Called when messages are received, is not used in this project any longer
+        /// </summary>
+        /// <param name="ev"></param>
         public void OnMessageReceived(IMessageEvent ev)
         {
             debugLog("Message received(This shouldn't happen anymore)");

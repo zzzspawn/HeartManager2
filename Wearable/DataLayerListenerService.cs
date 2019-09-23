@@ -11,11 +11,12 @@ using System.Text;
 using Android.Content;
 using Android.App;
 
+
 namespace Wearable
 {
-	/// <summary>
-	/// Listens to DataItems and Messages from the local node
-	/// </summary>
+
+    //TODO: Fairly certain this whole file can be deleted.
+
 	[Service(), IntentFilter(new string[] { "com.google.android.gms.wearable.BIND_LISTENER" }) ]
 	public class DataLayerListenerService : WearableListenerService
 	{
