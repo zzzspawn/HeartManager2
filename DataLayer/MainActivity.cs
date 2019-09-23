@@ -465,7 +465,10 @@ namespace DataLayer
             });
 		}
 
-        
+        /// <summary>
+        /// Opens the settings activity
+        /// </summary>
+        /// <param name="view"></param>
         [Export("onSettingsButtonClicked")]
         public void onSettingsButtonClicked(View view)
         {
@@ -474,7 +477,11 @@ namespace DataLayer
             StartActivity(intent);
             HeartDebugHandler.debugLog("BreakPoint");
         }
-
+        //TODO: Create a better interface for the charts, and display a chart for each data type
+        /// <summary>
+        /// Creates the chart from data on file, and displays it(only stepdata so far)
+        /// </summary>
+        /// <param name="view"></param>
         [Export("onToggleChartClicked")]
         public async void onToggleChartClicked(View view)
         {
@@ -546,6 +553,13 @@ namespace DataLayer
             }
         }
 
+        //TODO: if ever needed, could add a calculation using length and selectedIndex and figure out how many times it's divisible on the length instead of the loop, but optimizing here isn't really needed
+        /// <summary>
+        /// Takes a number(in this case the index of the data)
+        /// Returns a color corresponding to that number, and if the number is bigger than the array of colors, it wraps around
+        /// </summary>
+        /// <param name="selectedIndex"></param>
+        /// <returns></returns>
         private string getColor(int selectedIndex)
         {
 
@@ -568,7 +582,10 @@ namespace DataLayer
 
         }
 
-
+        /// <summary>
+        /// Saves any unsaved data to file, any data stored will be dequeued from the list
+        /// </summary>
+        /// <param name="view"></param>
         [Export("onSaveToFileClicked")]
         public void onSaveToFileClicked(View view)
         {
@@ -595,6 +612,13 @@ namespace DataLayer
             }
 
         }
+
+        //TODO: Add another upload that sends all codes to server, and get a new code in return, this should display a page that combines all the data into one view
+        /// <summary>
+        /// Tries to upload all data from files to azure website,
+        /// then notifies the user on the status of the upload for each data type
+        /// </summary>
+        /// <param name="view"></param>
         [Export("onUploadAllClicked")]
         public async void onUploadAllClicked(View view)
         {

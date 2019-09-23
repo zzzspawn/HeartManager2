@@ -13,9 +13,12 @@ using Android.Widget;
 
 namespace DataLayer
 {
+    /// <summary>
+    /// Updates the status, through a Textview from constructor parameters
+    /// </summary>
     class StatusHandler
     {
-        private string currentStatus;
+        private string currentStatus; //the status last written(without number count)
         private TextView statusView;
         public StatusHandler(TextView statusView, string initialStatus)
         {
@@ -25,6 +28,11 @@ namespace DataLayer
             statusView.Text = initialStatus;
         }
 
+        /// <summary>
+        /// Takes a string, check if the same has already been written, if so
+        /// appends a number corresponding to how many times the same string has been written
+        /// </summary>
+        /// <param name="status"></param>
         public void updateStatus(string status)
         {
             if (status == currentStatus)
@@ -51,7 +59,12 @@ namespace DataLayer
 
             currentStatus = status;
         }
-
+        //TODO: could probably read the string in reverse and extract the number from last parenthesis, instead of excluding "(" and ")" as legal characters in string
+        /// <summary>
+        /// extracts the number from string so it can be used in calculation for the new number
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private int extractNumber(string text)
         {
             int before = text.IndexOf('(');

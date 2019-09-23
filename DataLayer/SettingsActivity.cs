@@ -16,6 +16,10 @@ namespace DataLayer
     [Activity(Label = "SettingsActivity")]
     public class SettingsActivity : Activity
     {
+        /// <summary>
+        /// Initiates the activity
+        /// </summary>
+        /// <param name="savedInstanceState"></param>
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -26,7 +30,7 @@ namespace DataLayer
         }
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Deletes all the data files
         /// </summary>
         /// <param name="view"></param>
         [Export("onPurgeAllData")]
@@ -37,7 +41,7 @@ namespace DataLayer
         }
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Deletes the heart beat data
         /// </summary>
         /// <param name="view"></param>
         [Export("onPurgeHeartBeatData")]
@@ -48,7 +52,7 @@ namespace DataLayer
         }
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Deletes the heart rate data
         /// </summary>
         /// <param name="view"></param>
         [Export("onPurgeHeartRateData")]
@@ -59,7 +63,7 @@ namespace DataLayer
         }
 
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Deletes the steps data
         /// </summary>
         /// <param name="view"></param>
         [Export("onPurgeStepsData")]
@@ -69,8 +73,9 @@ namespace DataLayer
             HeartFileHandler.DeleteStepsData();
         }
 
+        //TODO: should probably make use of the native back functionality instead of restarting the main activity again, could lead to quite a large stack.
         /// <summary>
-        /// Sends an RPC to start a fullscreen Activity on the wearable
+        /// Starts the main activity screen
         /// </summary>
         /// <param name="view"></param>
         [Export("onBackClicked")]
