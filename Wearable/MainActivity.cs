@@ -31,6 +31,7 @@ using Xamarin.Essentials;
 
 namespace Wearable
 {
+    //TODO: add a "reconnect" button
     //TODO: find out what the parameters in activity does, and remove those not needed.
 	/// <summary>
 	/// wearable activity, sends data from sensors to handheld

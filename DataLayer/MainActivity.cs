@@ -30,7 +30,8 @@ using File = Java.IO.File;
 //TODO: clean up imports, this applies to everything(although do other todo's first, in case they're needed (Dependency managment is hard in C# and xamarin))
 
 namespace DataLayer
-{
+{   
+    //TODO: add a "reconnect" button
     //TODO: maybe move some functionality away from the home screen, maybe
     /// <summary>
     /// This activity does most everything in the application, except from deleting data, that is done in the settings
