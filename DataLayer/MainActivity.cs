@@ -62,6 +62,12 @@ namespace DataLayer
         private StatusHandler dataStatusHandler;
         private StatusHandler connectionStatusHandler;
 
+        private Microcharts.Droid.ChartView chartView; //chart container
+
+        /// <summary>
+        /// Main method sort of speak
+        /// </summary>
+        /// <param name="bundle"></param>
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
@@ -83,23 +89,10 @@ namespace DataLayer
                 .Build();
         }
 
-        //public void SendData(string data, string path)
-        //{
-        //    try
-        //    {
-        //        var request = PutDataMapRequest.Create(path);
-        //        var map = request.DataMap;
-        //        map.PutString("Message", data);
-        //        map.PutLong("UpdatedAt", DateTime.UtcNow.Ticks);
-        //        WearableClass.DataApi.PutDataItem(mGoogleApiClient, request.AsPutDataRequest());
-        //    }
-        //    finally
-        //    {
-        //        //_client.Disconnect();
-        //    }
-            
-        //}
-
+        /// <summary>
+        /// Legacy, ported to new status string handler
+        /// </summary>
+        /// <param name="text"></param>
         private void updateConnectionStatusString(string text)
         {
             RunOnUiThread(() =>
@@ -108,6 +101,10 @@ namespace DataLayer
                 connectionStatusHandler.updateStatus(text);
             });
         }
+        /// <summary>
+        /// Legacy, ported to new status string handler
+        /// </summary>
+        /// <param name="text"></param>
         private void updateStatusString(string text)
         {
             RunOnUiThread(() =>
@@ -117,9 +114,9 @@ namespace DataLayer
             });
         }
 
-        private Microcharts.Droid.ChartView chartView;
+        
         /// <summary>
-        /// Sets up UI components and their callback handlers
+        /// gets up UI components and assigns them to variables
         /// </summary>
         void SetupViews()
         {
@@ -131,6 +128,9 @@ namespace DataLayer
             imageView = (ImageView) FindViewById(Resource.Id.statusImage);
         }
 
+        /// <summary>
+        /// Initiates lists used
+        /// </summary>
         void SetupLists()
         {
             HeartDebugHandler.debugLog("Setting up Lists");
@@ -148,29 +148,48 @@ namespace DataLayer
             }
         }
 
-        protected override void OnStart()
+        /// <summary>
+        /// On start, reconnects to the wearable if it's not already connected
+        /// </summary>
+        protected override async void OnStart()
         {
             base.OnStart();
             HeartDebugHandler.debugLog("OnStart ran");
+            //Removes listeners first, then adds them; haven't found a good way to check if there is a listener currently
+            await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
+            await WearableClass.DataApi.AddListener(mGoogleApiClient, this);
 
-            if (!mGoogleApiClient.IsConnected)
+            await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
+            await WearableClass.MessageApi.AddListener(mGoogleApiClient, this);
+
+            await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
+            await WearableClass.NodeApi.AddListener(mGoogleApiClient, this);
+
+            if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
             {
                 updateConnectionStatusString("Connecting");
                 mGoogleApiClient.Connect();
             }
         }
-
+        /// <summary>
+        /// onResume reconnects if app isn't already connected or currently connecting
+        /// </summary>
         protected override async void OnResume()
         {
             base.OnResume();
             HeartDebugHandler.debugLog("OnResume ran");
 
             updateConnectionStatusString("Connecting");
+            await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.DataApi.AddListener(mGoogleApiClient, this);
+
+            await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.MessageApi.AddListener(mGoogleApiClient, this);
+
+            await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.NodeApi.AddListener(mGoogleApiClient, this);
 
-            if (!mGoogleApiClient.IsConnected)
+            if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
             {
                 
                 mGoogleApiClient.Connect();
@@ -178,6 +197,9 @@ namespace DataLayer
 
         }
 
+        /// <summary>
+        /// Disconnects the wearable connection, and removes listeners
+        /// </summary>
         protected override async void OnPause()
         {
             base.OnPause();
@@ -185,6 +207,7 @@ namespace DataLayer
             //if (!mResolvingError) { }
 
             updateConnectionStatusString("Disconnecting");
+            //TODO: should probably look into which listeners are actually needed, I believe it's only the dataApi and maybe the NodeApi that are actually in use
             await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
@@ -192,7 +215,9 @@ namespace DataLayer
             
         
         }
-
+        /// <summary>
+        /// Removes listeners and disconnects from the wearable
+        /// </summary>
         protected override async void OnStop()
         {
             base.OnStop();
@@ -207,25 +232,43 @@ namespace DataLayer
             //}
         }
 
+        //TODO: Clean up the whole connections and listeners mess, debug and find out when each is called and connect/add listeners where appropriate
+
+        /// <summary>
+        /// When connected it adds the listeners again
+        /// </summary>
+        /// <param name="connectionHint"></param>
         public async void OnConnected(Bundle connectionHint)
         {
             HeartDebugHandler.debugLog("Google API CLient was connected");
             //mResolvingError = false;
             connectionAttempts = 0;
             startActivityBtn.Enabled = true;
-            await WearableClass.DataApi.AddListenerAsync(mGoogleApiClient, this);
-            await WearableClass.MessageApi.AddListenerAsync(mGoogleApiClient, this);
-            await WearableClass.NodeApi.AddListenerAsync(mGoogleApiClient, this);
+            await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
+            await WearableClass.DataApi.AddListener(mGoogleApiClient, this);
+
+            await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
+            await WearableClass.MessageApi.AddListener(mGoogleApiClient, this);
+
+            await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
+            await WearableClass.NodeApi.AddListener(mGoogleApiClient, this);
             updateConnectionStatusString("Connected");
         }
 
+        /// <summary>
+        /// Connection was suspended it pretty much just notifies user about this
+        /// </summary>
+        /// <param name="cause"></param>
         public void OnConnectionSuspended(int cause)
         {
             HeartDebugHandler.debugLog("Connection to Google API client was suspended");
-            startActivityBtn.Enabled = false;
             updateConnectionStatusString("Connection Suspended");
         }
 
+        /// <summary>
+        /// Notifies user that connection was failed, although it tries connecting up to 10 times(defined variable up top)
+        /// </summary>
+        /// <param name="result"></param>
         public async void OnConnectionFailed(Android.Gms.Common.ConnectionResult result)
         {
             HeartDebugHandler.debugLog("Connection failed");
@@ -244,6 +287,11 @@ namespace DataLayer
             }
         }
 
+        /// <summary>
+        /// get's called when data from the wearable is received
+        /// needs to be different from earlier data, which is why you need the timestamps as part of the data if you want each data point
+        /// </summary>
+        /// <param name="dataEvents"></param>
         public void OnDataChanged(DataEventBuffer dataEvents)
         {
             HeartDebugHandler.debugLog("Data changed");
@@ -332,11 +380,21 @@ namespace DataLayer
             }
         }
 
+        //TODO: remove message handler and rely instead on the data handler
+        /// <summary>
+        /// called when a message from wearable is received
+        /// </summary>
+        /// <param name="messageEvent"></param>
         public void OnMessageReceived (IMessageEvent messageEvent)
 		{
             
 		}
-
+        //TODO: Move the decoding of datastring to datapoint to heart data point class, maybe as a constructor overload, or as part of a factory pattern
+        /// <summary>
+        /// Decodes a received string into a data point class instance instead
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         private HeartDataPoint decodeDataPoint(string data)
         {
 
@@ -386,6 +444,11 @@ namespace DataLayer
             return point;
         }
 
+        //TODO: The peer connected stuff can probably be removed
+        /// <summary>
+        /// Node stuff, can probably be removed
+        /// </summary>
+        /// <param name="peer"></param>
         public void OnPeerConnected (INode peer)
 		{
             HeartDebugHandler.debugLog("OnPeerConencted: " + peer);
@@ -402,6 +465,7 @@ namespace DataLayer
             });
 		}
 
+        
         [Export("onSettingsButtonClicked")]
         public void onSettingsButtonClicked(View view)
         {
