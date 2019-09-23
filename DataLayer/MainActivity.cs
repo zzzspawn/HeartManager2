@@ -31,7 +31,7 @@ using File = Java.IO.File;
 
 namespace DataLayer
 {   
-    //TODO: add a "reconnect" button
+    //TODO: add a "reconnect" button, and don't disconnect when changing activity; maybe onPause, but look it up
     //TODO: maybe move some functionality away from the home screen, maybe
     /// <summary>
     /// This activity does most everything in the application, except from deleting data, that is done in the settings
