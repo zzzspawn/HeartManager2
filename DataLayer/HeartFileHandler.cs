@@ -152,10 +152,12 @@ namespace DataLayer
                 string line;
                 HeartDataType dataType = HeartDataType.None;
                 DateTime? date = null;
+                string accuracy = null;
                 int value = -1;
                 bool dataReached = false;
                 bool param1Found = false;
                 bool param2Found = false;
+                bool param3Found = false;
 
                 //TODO: move this into the class definition of the dataclass, probably as a builder/factory or some fitting pattern, probably a better place to handle it.
                 while ((line = await reader.ReadLineAsync()) != null)
@@ -177,6 +179,7 @@ namespace DataLayer
                         int length = last - first;
                         //HeartDebugHandler.debugLog("length: " + length);
                         string typeVal = type.Substring(first, length);
+                        
                         //HeartDebugHandler.debugLog("typeVal: " + typeVal);
                         dataType = (HeartDataType)Enum.Parse(typeof(HeartDataType), typeVal); //will crash if no match exists
                         //HeartDebugHandler.debugLog("dataType: " + dataType.ToString("G"));
@@ -216,11 +219,23 @@ namespace DataLayer
                             value = int.Parse(valueString);
                         }
 
-                        if (param1Found && param2Found)
+                        if (param1Found && param2Found && line.Contains("accuracy"))
+                        {
+                            param3Found = true;
+                            string accuracyString = line.Split(new[] { ':' }, 2)[1];
+                            int first = accuracyString.IndexOf("\"") + 1;
+                            int last = accuracyString.LastIndexOf("\"");
+                            int length = last - first;
+                            accuracy = accuracyString.Substring(first, length);
+
+                        }
+
+                        if (param1Found && param2Found && param3Found)
                         {
                             if (dataType != HeartDataType.None && value != -1 && date.HasValue)
                             {
-                                HeartDataPoint dataPoint = new HeartDataPoint(dataType, value, (DateTime)date);
+                                
+                                HeartDataPoint dataPoint = new HeartDataPoint(dataType, value, (DateTime)date, accuracy);
                                 //HeartDebugHandler.debugLog("Breakpoinmarker");
                                 dataPoints.Add(dataPoint);
 
@@ -266,6 +281,9 @@ namespace DataLayer
                     stringBuilder.Append("\"");
                     stringBuilder.Append(",\"value\": ");
                     stringBuilder.Append(x.amount.ToString());
+                    stringBuilder.Append(",\"accuracy\": ");
+                    stringBuilder.Append(x.accuracy);
+                    stringBuilder.Append("\"");
                     stringBuilder.Append("}");
                     if (i < list.Count - 1)
                     {
@@ -308,7 +326,7 @@ namespace DataLayer
                     file.Delete();
                 }
 
-                string debugString = "";
+                //string debugString = "";
 
                 using (var writer = System.IO.File.CreateText(backingFile))
                 {
@@ -316,39 +334,40 @@ namespace DataLayer
                     var indentOne = "\t";
                     var indentTwo = "\t\t";
                     var indentThree = "\t\t\t";
-                    await writer.WriteLineAsync("{"); debugString += "{";
-                    await writer.WriteLineAsync(indentOne + "\"updated\": \"" + currentTime.ToString("O") + "\","); debugString += indentOne + "\"updated\": \"" + currentTime.ToString("O") + "\",";
-                    await writer.WriteLineAsync(indentOne + "\"dataType\": \"" + dataType.ToString("G") + "\","); debugString += indentOne + "\"dataType\": \"" + dataType.ToString("G") + "\",";
+                    await writer.WriteLineAsync("{"); //debugString += "{";
+                    await writer.WriteLineAsync(indentOne + "\"updated\": \"" + currentTime.ToString("O") + "\","); //debugString += indentOne + "\"updated\": \"" + currentTime.ToString("O") + "\",";
+                    await writer.WriteLineAsync(indentOne + "\"dataType\": \"" + dataType.ToString("G") + "\","); //debugString += indentOne + "\"dataType\": \"" + dataType.ToString("G") + "\",";
 
-                    await writer.WriteLineAsync(indentOne + "\"data\": ["); debugString += indentOne + "\"data\": [";
+                    await writer.WriteLineAsync(indentOne + "\"data\": ["); //debugString += indentOne + "\"data\": [";
 
                     for (int i = 0; i < dataPoints.Count; i++)
                     {
                         HeartDataPoint point = dataPoints[i];
-                        await writer.WriteLineAsync(indentTwo + "{"); debugString += indentTwo + "{";
-                        await writer.WriteLineAsync(indentThree + "\"DateTime\": " + "\"" + point.timestamp.ToString("O") + "\","); debugString += indentThree + "\"DateTime\": " + "\"" + point.timestamp.ToString("O") + "\",";
-                        await writer.WriteLineAsync(indentThree + "\"Value\": " + "\"" + point.amount + "\""); debugString += indentThree + "\"Value\": " + point.amount;
+                        await writer.WriteLineAsync(indentTwo + "{"); //debugString += indentTwo + "{";
+                        await writer.WriteLineAsync(indentThree + "\"DateTime\": " + "\"" + point.timestamp.ToString("O") + "\","); //debugString += indentThree + "\"DateTime\": " + "\"" + point.timestamp.ToString("O") + "\",";
+                        await writer.WriteLineAsync(indentThree + "\"Value\": " + "\"" + point.amount + "\","); //debugString += indentThree + "\"Value\": " + point.amount;
+                        await writer.WriteLineAsync(indentThree + "\"accuracy\": " + "\"" + point.accuracy + "\"");
                         string lastLine = "}";
                         if (i < dataPoints.Count - 1)
                         {
                             lastLine += ",";
                         }
-                        await writer.WriteLineAsync(indentTwo + lastLine); debugString += indentTwo + lastLine;
+                        await writer.WriteLineAsync(indentTwo + lastLine); //debugString += indentTwo + lastLine;
                     }
-                    await writer.WriteLineAsync(indentOne + "]"); debugString += indentOne + "]";
-                    await writer.WriteLineAsync("}"); debugString += "}";
+                    await writer.WriteLineAsync(indentOne + "]"); //debugString += indentOne + "]";
+                    await writer.WriteLineAsync("}"); //debugString += "}";
 
                 }
                 dataStatusHandler.updateStatus("File saved");
-                if (debugString != "")
-                {
-                    HeartDebugHandler.debugLog("File that was saved: ");
-                    HeartDebugHandler.debugLog(debugString);
-                }
-                else
-                {
-                    HeartDebugHandler.debugLog("debug string contained nothing");
-                }
+                //if (debugString != "")
+                //{
+                //    HeartDebugHandler.debugLog("File that was saved: ");
+                //    HeartDebugHandler.debugLog(debugString);
+                //}
+                //else
+                //{
+                //    HeartDebugHandler.debugLog("debug string contained nothing");
+                //}
 
             }
             else

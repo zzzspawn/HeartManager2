@@ -67,6 +67,8 @@ namespace Wearable
         Sensor heartBeatsensor;
         Sensor stepCounter;
 
+        private string[] accuracies;
+
         private Queue<HeartDataPoint> dataPoints; //queue of datapoints that are to be sent on to the other device(might be able to skip this now with the new data system)
 
         //Paths that are used on both devices to check what type of message was received
@@ -89,6 +91,7 @@ namespace Wearable
             debugLog("App Launched");
 
             dataPoints = new Queue<HeartDataPoint>();
+            accuracies = new string[3];
 
             setUpPermissions();
 
@@ -397,17 +400,32 @@ namespace Wearable
                 if (stepCounter != null && sensor.Type == stepCounter.Type)
                 {
                     debugLog("Accuracy changed for stepcounter");
+                    accuracies[0] = accuracy.ToString("G");
                 }
                 else if (heartBeatsensor != null && sensor.Type == heartBeatsensor.Type)
                 {
                     debugLog("Accuracy changed for heartbeat sensor");
+                    accuracies[1] = accuracy.ToString("G");
                 }
                 else if (heartRatesensor != null && sensor.Type == heartRatesensor.Type)
                 {
                     debugLog("Accuracy changed for heart rate sensor");
+                    accuracies[2] = accuracy.ToString("G");
                 }
             }
-            sensorStatusHandler.updateStatus("Sensor accuracy changed");
+
+            if (sensor != null)
+            {
+                string type = sensor.Type.ToString("G");
+                string acc = accuracy.ToString();
+                sensorStatusHandler.updateStatus(type + "accuracy changed(" + acc + ")" );
+            }
+            else
+            {
+                sensorStatusHandler.updateStatus("Sensor accuracy changed");
+            }
+
+            
         }
 
         /// <summary>
@@ -426,24 +444,36 @@ namespace Wearable
                 if (stepCounter != null && e.Sensor.Type == stepCounter.Type)
                 {
                     debugLog("Sensor change match for stepcounter");
-                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.StepCount, (int) e.Values[0],DateTime.Now));
+                    if (accuracies[0] == null)
+                    {
+                        accuracies[0] = SensorStatus.NoContact.ToString("G");
+                    }
+                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.StepCount, (int) e.Values[0],DateTime.Now, accuracies[0]));
                 }
                 else if (heartBeatsensor != null && e.Sensor.Type == heartBeatsensor.Type)
                 {
                     debugLog("Sensor change match for heartbeat sensor");
-                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.HeartBeat, (int)e.Values[0], DateTime.Now));
+                    if (accuracies[1] == null)
+                    {
+                        accuracies[1] = SensorStatus.NoContact.ToString("G");
+                    }
+                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.HeartBeat, (int)e.Values[0], DateTime.Now, accuracies[1]));
                 }
                 else if (heartRatesensor != null && e.Sensor.Type == heartRatesensor.Type)
                 {
                     debugLog("Sensor change match for heart rate sensor");
-                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.HeartRate, (int)e.Values[0], DateTime.Now));
+                    if (accuracies[2] == null)
+                    {
+                        accuracies[2] = SensorStatus.NoContact.ToString("G");
+                    }
+                    dataPoints.Enqueue(new HeartDataPoint(HeartDataType.HeartRate, (int)e.Values[0], DateTime.Now, accuracies[2]));
                 }
 
                 Log.Info("HH_TEST", "Datapoints Count: " + dataPoints.Count);
                 debugLog("Amount of datapoints queued: " + dataPoints.Count);
                 if (dataPoints.Count > 0)
                 {
-                    trySendData();
+                    trySendData(); //TODO: Find a way to confirm data being received, and fail if not, then store data for later transfer
                 }
 
                 debugLog("Printing available values next: ");
@@ -475,7 +505,9 @@ namespace Wearable
                 string dateString = point.timestamp.ToString("o");
                 string typeString = point.heartType.ToString("G");
                 string numberString = point.amount.ToString();
-                message += typeString + ";" + numberString + ";" + dateString;
+                string accuracy = point.accuracy;
+                
+                message += typeString + ";" + numberString + ";" + dateString + ";" + accuracy;
 
                 if (i < 100 - 1 && dataPoints.Count > 0)
                 {
@@ -494,6 +526,10 @@ namespace Wearable
             {
                 debugLog("Sending multiple datapoints failed, message was null or blank");
                 dataStatusHandler.updateStatus("Data could not be sent");
+                for (int i = 0; i < backupList.Count; i++)
+                {
+                    dataPoints.Append(backupList.Dequeue());
+                }
             }
             
 
@@ -529,11 +565,13 @@ namespace Wearable
             public HeartDataType heartType { get; }
             public int amount { get; set; }
             public DateTime timestamp { get; }
-            public HeartDataPoint(HeartDataType heartType, int amount, DateTime timestamp)
+            public string accuracy { get; }
+            public HeartDataPoint(HeartDataType heartType, int amount, DateTime timestamp, string accuracy)
             {
                 this.heartType = heartType;
                 this.amount = amount;
                 this.timestamp = timestamp;
+                this.accuracy = accuracy;
             }
 
         }

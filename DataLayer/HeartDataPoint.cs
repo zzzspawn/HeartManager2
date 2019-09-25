@@ -22,11 +22,14 @@ namespace DataLayer
         public HeartDataType heartType { get; }
         public int amount { get; set; }
         public DateTime timestamp { get; }
-        public HeartDataPoint(HeartDataType heartType, int amount, DateTime timestamp)
+        public string accuracy { get; }
+
+        public HeartDataPoint(HeartDataType heartType, int amount, DateTime timestamp, string accuracy)
         {
             this.heartType = heartType;
             this.amount = amount;
             this.timestamp = timestamp;
+            this.accuracy = accuracy;
         }
         //TODO: should probably move the different "stringifying" methods into this class, so that it is better encapsulated in the correct area.
     }

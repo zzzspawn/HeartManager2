@@ -18,7 +18,7 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:text="Heart Monitor"
-          android:textSize="50dp"
+          android:textSize="40dp"
         />
 
         <ImageButton
@@ -113,7 +113,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Code"
-        android:textSize="35dp"
+        android:textSize="25dp"
         android:layout_below="@id/statusTextDivider"
         android:visibility="invisible"
     />
@@ -125,6 +125,7 @@
         android:src="@drawable/heartlogo"
         android:layout_below="@id/mainCodeTV"
         android:layout_above="@id/savetofilebtn"
+
     />
 
     <Microcharts.Droid.ChartView

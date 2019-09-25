@@ -88,6 +88,14 @@ namespace DataLayer
                 .AddConnectionCallbacks(this)
                 .AddOnConnectionFailedListener(this)
                 .Build();
+
+
+            if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
+            {
+                updateConnectionStatusString("Connecting");
+                mGoogleApiClient.Connect();
+            }
+
         }
 
         /// <summary>
@@ -180,7 +188,7 @@ namespace DataLayer
             base.OnResume();
             HeartDebugHandler.debugLog("OnResume ran");
 
-            updateConnectionStatusString("Connecting");
+            
             await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.DataApi.AddListener(mGoogleApiClient, this);
 
@@ -192,7 +200,7 @@ namespace DataLayer
 
             if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
             {
-                
+                updateConnectionStatusString("Connecting");
                 mGoogleApiClient.Connect();
             }
 
@@ -279,8 +287,9 @@ namespace DataLayer
                 if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
                 {
                     mGoogleApiClient.Connect();
+                    updateConnectionStatusString("Connecting");
                 }
-                updateConnectionStatusString("Connecting");
+                
             }
             else
             {
@@ -402,7 +411,7 @@ namespace DataLayer
             HeartDataPoint point = null;
 
             string[] types = data.Split(";");
-            if (types.Length == 3)
+            if (types.Length == 4)
             {
 
                 Queue<HeartDataPoint> listRef;
@@ -437,7 +446,9 @@ namespace DataLayer
                     //string dateString = date.ToString("o");
                     DateTime restoredDate = DateTime.Parse(types[2], null, DateTimeStyles.RoundtripKind);
 
-                    point = new HeartDataPoint(dataType, value, restoredDate);
+                    string accuracy = types[3];
+
+                    point = new HeartDataPoint(dataType, value, restoredDate, accuracy);
 
                 }
 
