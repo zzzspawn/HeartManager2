@@ -153,7 +153,7 @@ namespace DataLayer
 
         
         /// <summary>
-        /// gets up UI components and assigns them to variables
+        /// finds UI components and assigns them to variables
         /// </summary>
         void SetupViews()
         {

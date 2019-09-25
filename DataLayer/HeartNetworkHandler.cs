@@ -18,6 +18,7 @@ using Java.Util.Concurrent;
 using RestSharp;
 using Square.OkHttp3;
 using System.Net.Http;
+using Java.Sql;
 
 namespace DataLayer
 {
@@ -74,7 +75,8 @@ namespace DataLayer
             {
                 var stepValues = new NameValueCollection();
                 stepValues.Add("hdatatype", "StepCount");
-                stepValues.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00"); //replace with actual date
+                DateTime now = DateTime.Now;
+                stepValues.Add("hupdated", now.ToString("o"));
                 stepValues.Add("hdatapoints", stepsDataString);
                 stepsClient.Headers[HttpRequestHeader.Accept] =
                     "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
@@ -182,15 +184,13 @@ namespace DataLayer
             {
                 using (var heartBeatClient = new WebClient())
                 {
-
                     var heartBeatValues = new NameValueCollection();
                     heartBeatValues.Add("hdatatype", "Heartbeat");
-                    heartBeatValues.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00"); //replace with actual date
+                    DateTime now = DateTime.Now;
+                    heartBeatValues.Add("hupdated", now.ToString("o"));
                     heartBeatValues.Add("hdatapoints", heartBeatDataString);
                     heartBeatClient.Headers[HttpRequestHeader.Accept] =
                         "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-
-
                     heartBeatClient.UploadValuesCompleted += dataUploadedCallback;
                     heartBeatClient.UploadValuesAsync(new Uri(url), "POST", heartBeatValues, heartbeatToken);
 
@@ -204,7 +204,8 @@ namespace DataLayer
 
                     var heartRateValues = new NameValueCollection();
                     heartRateValues.Add("hdatatype", "HeartRate");
-                    heartRateValues.Add("hupdated", "2019-09-05T08:58:57.5367850+02:00"); //replace with actual date
+                    DateTime now = DateTime.Now;
+                    heartRateValues.Add("hupdated", now.ToString("o"));
                     heartRateValues.Add("hdatapoints", heartRateDataString);
                     heartRateClient.Headers[HttpRequestHeader.Accept] =
                         "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
