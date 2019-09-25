@@ -67,7 +67,6 @@ namespace DataLayer
         private Microcharts.Droid.ChartView chartView; //chart container
 
         SwipeRefreshLayout swipeRefreshLayout;
-        ListView gridView;
 
         /// <summary>
         /// Main method sort of speak

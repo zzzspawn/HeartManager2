@@ -26,6 +26,7 @@ using Android.Runtime;
 using Android.Support.Design.Widget;
 using Android.Support.V4.App;
 using Android.Support.V4.Content;
+using Android.Support.V4.Widget;
 using DataLayer;
 using Xamarin.Essentials;
 
@@ -77,6 +78,10 @@ namespace Wearable
         const string DataPointsPath = "/data-points";
         const string TestDataPath = "/data-test";
         private int BODYSENSOR_CODE = 123; //needed to check if the permission you asked for is the same you got the result for
+
+        SwipeRefreshLayout swipeRefreshLayout;
+
+
         /// <summary>
         /// inits the activity and asks the screen to stay on
         /// </summary>
@@ -98,6 +103,24 @@ namespace Wearable
             setUpViews();
 
             setUpSensors();
+
+            swipeRefreshLayout = FindViewById<SwipeRefreshLayout>(Resource.Id.swipeRefreshLayout);
+
+            swipeRefreshLayout.Refresh += delegate (object sender, System.EventArgs e)
+            {
+                swipeRefreshLayout.Refreshing = true;
+
+                //Toast.MakeText(this, "Reconnecting", ToastLength.Short).Show();
+                if (!googleApiClient.IsConnected && !googleApiClient.IsConnecting)
+                {
+                    sensorStatusHandler.updateStatus("Connecting");
+                    googleApiClient.Connect();
+                }
+
+
+                swipeRefreshLayout.Refreshing = false;
+            };
+
 
             googleApiClient = new GoogleApiClient.Builder (this)
 				.AddApi (WearableClass.API)
@@ -266,6 +289,7 @@ namespace Wearable
         public void OnConnected (Bundle bundle)
 		{
             debugLog("Connection established");
+            connectionStatusHandler.updateStatus("Connected");
             WearableClass.DataApi.AddListener(googleApiClient, this);
             //connectionTextView.Visibility = ViewStates.Gone;
         }
