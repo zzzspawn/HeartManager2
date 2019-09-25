@@ -28,7 +28,7 @@ namespace DataLayer
         //An array storing the save status for each of the files, so we don't try to double write to one.
         private static string[] beingSaved = new string[3];
 
-        //TODO: should probably think a little bit harder about how I'm using these task and async classes; could probably be condensed in some ways.
+        //TODO: Should probably think a little bit harder about how I'm using these task and async classes; could probably be condensed in some ways.
         
         /// <summary>
         /// just a go between class for getting the data using a task, so it can be awaited

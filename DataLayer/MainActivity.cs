@@ -22,6 +22,7 @@ using System.Text;
 using Android.Util;
 using Android.Content.PM;
 using System.Threading.Tasks;
+using Android.Support.V4.Widget;
 using Java.Sql;
 using Microcharts;
 using SkiaSharp;
@@ -65,6 +66,9 @@ namespace DataLayer
 
         private Microcharts.Droid.ChartView chartView; //chart container
 
+        SwipeRefreshLayout swipeRefreshLayout;
+        ListView gridView;
+
         /// <summary>
         /// Main method sort of speak
         /// </summary>
@@ -79,6 +83,29 @@ namespace DataLayer
             HeartDebugHandler.debugLog("App Launched");
             SetupViews();
             SetupLists();
+
+            //gridViewContainer
+
+            //gridView = FindViewById<ListView>(Resource.Id.gridViewContainer);
+            swipeRefreshLayout = FindViewById<SwipeRefreshLayout>(Resource.Id.swipeRefreshLayout);
+
+            // Elevation helps users understand the relative importance of each element and focus their attention to the task at hand. (Optional)
+            // swipeRefreshLayout.Elevation = 10; 
+
+            swipeRefreshLayout.Refresh += delegate (object sender, System.EventArgs e)
+                {
+                    swipeRefreshLayout.Refreshing = true;
+
+                    Toast.MakeText(this, "Reconnecting", ToastLength.Short).Show();
+                    if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
+                    {
+                        updateConnectionStatusString("Connecting");
+                        mGoogleApiClient.Connect();
+                    }
+
+
+                    swipeRefreshLayout.Refreshing = false;
+                };
 
             dataStatusHandler = new StatusHandler(statusTextView, "No data received");
             connectionStatusHandler = new StatusHandler(connectionStatusTextView, "");

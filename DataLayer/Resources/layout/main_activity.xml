@@ -1,141 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#181818"
-    android:theme="@android:style/Theme.Holo.NoActionBar"
->
-
-  <RelativeLayout
-      android:id="@+id/CustomActionBar"
-      android:layout_width="match_parent"
-      android:layout_height="60dp"
-      android:layout_alignParentTop="true"
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:theme="@android:style/Theme.Holo.NoActionBar"
+  android:background="#181818"
   >
-        <TextView
-          android:id="@+id/AppTitle"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="Heart Monitor"
-          android:textSize="40dp"
-        />
 
-        <ImageButton
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:onClick="onSettingsButtonClicked"
-          android:layout_alignParentRight="true"
-          android:layout_centerVertical="true"
-          android:layout_marginRight="5dp"
-          android:src="@drawable/ic_settings_white_24dp"
-        />
+  <android.support.v4.widget.SwipeRefreshLayout
+    android:id="@+id/swipeRefreshLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-  </RelativeLayout>
-  <View 
-        android:id="@+id/mainActionBarDivider"
-        style="@style/Divider"
-        android:layout_below="@id/CustomActionBar"      
-  />
+        <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+        >
 
-    <TextView
-      android:id="@+id/connectionStatusText"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:text="StatusText"
-      android:textSize="56px"
-      android:textAlignment="center"
-      android:layout_below="@id/mainActionBarDivider"
-      android:gravity="center_horizontal"
-    />
-    <TextView
-      android:id="@+id/statusText"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:text="StatusText"
-      android:textSize="56px"
-      android:textAlignment="center"
-      android:layout_below="@id/connectionStatusText"
-      android:gravity="center_horizontal"
-    />
+          <RelativeLayout
+              android:id="@+id/CustomActionBar"
+              android:layout_width="match_parent"
+              android:layout_height="60dp"
+              android:layout_alignParentTop="true"
+          >
+            <TextView
+              android:id="@+id/AppTitle"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Heart Monitor"
+              android:textSize="40dp"
+            />
 
-    <View 
-        android:id="@+id/statusTextDivider"
-        style="@style/Divider"
-      android:layout_below="@id/statusText"      
-    />
+            <ImageButton
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:onClick="onSettingsButtonClicked"
+              android:layout_alignParentRight="true"
+              android:layout_centerVertical="true"
+              android:layout_marginRight="5dp"
+              android:src="@drawable/ic_settings_white_24dp"
+            />
 
-    <Button
-      android:id="@+id/start_wearable_activity"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:onClick="onStartWearableActivityClick"
-      android:text="@string/start_wearable_activity"
-      android:enabled="false"
-      android:layout_alignParentBottom="true"
-      android:layout_alignParentLeft="true"
-      android:layout_alignParentRight="true"
-      android:textSize="30px" 
-      android:visibility="gone"  
-    />
+          </RelativeLayout>
+          <View 
+                android:id="@+id/mainActionBarDivider"
+                style="@style/Divider"
+                android:layout_below="@id/CustomActionBar"      
+          />
 
-    <Button
-        android:id="@+id/savetofilebtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Save to file"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:onClick="onSaveToFileClicked"
-    />
-  <Button
-      android:id="@+id/SendAllDataButton"  
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_centerHorizontal="true"
-      android:layout_alignParentBottom="true"
-      android:text="Upload"
-      android:onClick="onUploadAllClicked"
-    />
-    <Button
-        android:id="@+id/toggleChartBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Toggle chart"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:onClick="onToggleChartClicked"
-    />
+          <TextView
+            android:id="@+id/connectionStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="StatusText"
+            android:textSize="56px"
+            android:textAlignment="center"
+            android:layout_below="@id/mainActionBarDivider"
+            android:gravity="center_horizontal"
+          />
+          <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="StatusText"
+            android:textSize="56px"
+            android:textAlignment="center"
+            android:layout_below="@id/connectionStatusText"
+            android:gravity="center_horizontal"
+          />
+
+          <View 
+              android:id="@+id/statusTextDivider"
+              style="@style/Divider"
+            android:layout_below="@id/statusText"      
+          />
+
+          <Button
+            android:id="@+id/start_wearable_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onStartWearableActivityClick"
+            android:text="@string/start_wearable_activity"
+            android:enabled="false"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:textSize="30px" 
+            android:visibility="gone"  
+          />
+
+          <Button
+              android:id="@+id/savetofilebtn"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Save to file"
+              android:layout_alignParentBottom="true"
+              android:layout_alignParentLeft="true"
+              android:onClick="onSaveToFileClicked"
+          />
+          <Button
+              android:id="@+id/SendAllDataButton"  
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_centerHorizontal="true"
+              android:layout_alignParentBottom="true"
+              android:text="Upload"
+              android:onClick="onUploadAllClicked"
+            />
+          <Button
+              android:id="@+id/toggleChartBtn"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Toggle chart"
+              android:layout_alignParentBottom="true"
+              android:layout_alignParentRight="true"
+              android:onClick="onToggleChartClicked"
+          />
 
 
-    <TextView
-        android:id="@+id/mainCodeTV"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Code"
-        android:textSize="25dp"
-        android:layout_below="@id/statusTextDivider"
-        android:visibility="invisible"
-    />
+          <TextView
+              android:id="@+id/mainCodeTV"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="Code"
+              android:textSize="25dp"
+              android:layout_below="@id/statusTextDivider"
+              android:visibility="invisible"
+          />
 
-    <ImageView
-        android:id="@+id/statusImage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:src="@drawable/heartlogo"
-        android:layout_below="@id/mainCodeTV"
-        android:layout_above="@id/savetofilebtn"
+          <ImageView
+              android:id="@+id/statusImage"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:src="@drawable/heartlogo"
+              android:layout_below="@id/mainCodeTV"
+              android:layout_above="@id/savetofilebtn"
 
-    />
+          />
 
-    <Microcharts.Droid.ChartView
-        android:id="@+id/linechart"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/statusText"
-        android:layout_above="@id/savetofilebtn"
-        android:visibility="gone"
-    />
-
+          <Microcharts.Droid.ChartView
+              android:id="@+id/linechart"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_below="@id/statusText"
+              android:layout_above="@id/savetofilebtn"
+              android:visibility="gone"
+          />
     
-</RelativeLayout>
+        </RelativeLayout>
+
+  </android.support.v4.widget.SwipeRefreshLayout>
+
+</LinearLayout>
