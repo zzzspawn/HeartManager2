@@ -98,7 +98,8 @@ namespace DataLayer
                     Toast.MakeText(this, "Reconnecting", ToastLength.Short).Show();
                     if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
                     {
-                        updateConnectionStatusString("Connecting");
+                        //updateConnectionStatusString("Connecting");
+                        connectionStatusHandler.updateStatus("Connecting");
                         mGoogleApiClient.Connect();
                     }
 
@@ -118,7 +119,7 @@ namespace DataLayer
 
             if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
             {
-                updateConnectionStatusString("Connecting");
+                connectionStatusHandler.updateStatus("Connecting");
                 mGoogleApiClient.Connect();
             }
 
@@ -128,26 +129,27 @@ namespace DataLayer
         /// Legacy, ported to new status string handler
         /// </summary>
         /// <param name="text"></param>
-        private void updateConnectionStatusString(string text)
-        {
-            RunOnUiThread(() =>
-            {
-                //connectionStatusTextView.Text = text;
-                connectionStatusHandler.updateStatus(text);
-            });
-        }
+        //private void updateConnectionStatusString(string text)
+        //{
+        //    RunOnUiThread(() =>
+        //    {
+        //        //connectionStatusTextView.Text = text;
+        //        connectionStatusHandler.updateStatus(text);
+        //    });
+        //}
+
         /// <summary>
         /// Legacy, ported to new status string handler
         /// </summary>
         /// <param name="text"></param>
-        private void updateStatusString(string text)
-        {
-            RunOnUiThread(() =>
-            {
-                //statusTextView.Text = text;
-                dataStatusHandler.updateStatus(text);
-            });
-        }
+        //private void updateStatusString(string text)
+        //{
+        //    RunOnUiThread(() =>
+        //    {
+        //        //statusTextView.Text = text;
+        //        dataStatusHandler.updateStatus(text);
+        //    });
+        //}
 
         
         /// <summary>
@@ -202,7 +204,8 @@ namespace DataLayer
 
             if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
             {
-                updateConnectionStatusString("Connecting");
+                //updateConnectionStatusString("Connecting");
+                connectionStatusHandler.updateStatus("Connecting");
                 mGoogleApiClient.Connect();
             }
         }
@@ -226,7 +229,8 @@ namespace DataLayer
 
             if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
             {
-                updateConnectionStatusString("Connecting");
+                //updateConnectionStatusString("Connecting");
+                connectionStatusHandler.updateStatus("Connecting");
                 mGoogleApiClient.Connect();
             }
 
@@ -241,7 +245,8 @@ namespace DataLayer
             HeartDebugHandler.debugLog("App Paused");
             //if (!mResolvingError) { }
 
-            updateConnectionStatusString("Disconnecting");
+            //updateConnectionStatusString("Disconnecting");
+            connectionStatusHandler.updateStatus("Disconnecting");
             //TODO: should probably look into which listeners are actually needed, I believe it's only the dataApi and maybe the NodeApi that are actually in use
             await WearableClass.DataApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
@@ -263,7 +268,8 @@ namespace DataLayer
                 await WearableClass.MessageApi.RemoveListenerAsync(mGoogleApiClient, this);
                 await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
                 mGoogleApiClient.Disconnect();
-                updateConnectionStatusString("Disconnecting");
+                //updateConnectionStatusString("Disconnecting");
+                connectionStatusHandler.updateStatus("Disconnecting");
             //}
         }
 
@@ -287,7 +293,8 @@ namespace DataLayer
 
             await WearableClass.NodeApi.RemoveListenerAsync(mGoogleApiClient, this);
             await WearableClass.NodeApi.AddListener(mGoogleApiClient, this);
-            updateConnectionStatusString("Connected");
+            //updateConnectionStatusString("Connected");
+            connectionStatusHandler.updateStatus("Connected");
         }
 
         /// <summary>
@@ -297,7 +304,8 @@ namespace DataLayer
         public void OnConnectionSuspended(int cause)
         {
             HeartDebugHandler.debugLog("Connection to Google API client was suspended");
-            updateConnectionStatusString("Connection Suspended");
+            //updateConnectionStatusString("Connection Suspended");
+            connectionStatusHandler.updateStatus("Connection Suspended");
         }
 
         /// <summary>
@@ -313,13 +321,15 @@ namespace DataLayer
                 if (!mGoogleApiClient.IsConnected && !mGoogleApiClient.IsConnecting)
                 {
                     mGoogleApiClient.Connect();
-                    updateConnectionStatusString("Connecting");
+                    //updateConnectionStatusString("Connecting");
+                    connectionStatusHandler.updateStatus("Connecting");
                 }
                 
             }
             else
             {
-                updateConnectionStatusString("Connection failed");
+                //updateConnectionStatusString("Connection failed");
+                connectionStatusHandler.updateStatus("Connection failed");
             }
         }
 
@@ -405,12 +415,14 @@ namespace DataLayer
                     if (hrReceived) {types += "HR,"; }
                     if (hbReceived) { types += "HB,"; }
                     if (stepReceived) { types += "St"; }
-                    updateStatusString("Data received, Types: {"+ types + "}, Amount: " + teller + ".");
+                    //updateStatusString("Data received, Types: {"+ types + "}, Amount: " + teller + ".");
+                    connectionStatusHandler.updateStatus("Data received, Types: {" + types + "}, Amount: " + teller + ".");
                     //saveStepData();//bør nok kjøres på en mer intelligent måte
                 }
                 else
                 {
-                    updateStatusString("Invalid data received.");
+                    //updateStatusString("Invalid data received.");
+                    connectionStatusHandler.updateStatus("Invalid data received.");
                 }
 
             }
@@ -491,7 +503,8 @@ namespace DataLayer
 		{
             HeartDebugHandler.debugLog("OnPeerConencted: " + peer);
 			handler.Post (() => {
-                updateConnectionStatusString("Peer Connected");
+                //updateConnectionStatusString("Peer Connected");
+                connectionStatusHandler.updateStatus("Peer Connected");
             });
 		}
 
@@ -499,7 +512,8 @@ namespace DataLayer
 		{
 			HeartDebugHandler.debugLog("OnPeerDisconnected: " + peer);
 			handler.Post (() => {
-                updateConnectionStatusString("Peer Disconnected");
+                //updateConnectionStatusString("Peer Disconnected");
+                connectionStatusHandler.updateStatus("Peer Disconnected");
             });
 		}
 
